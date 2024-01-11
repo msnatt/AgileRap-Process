@@ -1,0 +1,135 @@
+﻿@model IEnumerable<AgileRap_Process_Software_ModelV2.Models.Work>
+
+@{
+    ViewData["Title"] = "Edit";
+}
+
+<h1>สร้างรายการงาน</h1>
+<br />
+<br />
+<table class="table table-borlesses">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.CreateDate)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Project)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Name)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.DueDate)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CreateBy)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.ProviderList)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.StatusID)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Remark)
+            </th>
+            <th>
+                @Html.DisplayName("Manage")
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        @using (Html.BeginForm("Edit", "Works", FormMethod.Post, new { id = "manageform", name = "manageform" }))
+        {
+            @foreach (var item in Model)
+            {
+                if (item.ID != ViewBag.WorkID)
+                {
+                    @Html.HiddenFor(m=>item.ID)
+                    @Html.HiddenFor(m=>item.HeaderID)
+                    @Html.HiddenFor(m=>item.Project)
+                    @Html.HiddenFor(m=>item.Name)
+                    @Html.HiddenFor(m=>item.DueDate)
+                    @Html.HiddenFor(m=>item.CreateBy)
+                    @Html.HiddenFor(m=>item.CreateDate)
+                    @Html.HiddenFor(m=>item.UpdateBy)
+                    @Html.HiddenFor(m=>item.UpdateDate)
+                    @Html.HiddenFor(m=>item.ProviderList)
+                    @Html.HiddenFor(m=>item.Status)
+                    @Html.HiddenFor(m=>item.StatusID)
+                    @Html.HiddenFor(m=>item.Remark)
+                    @Html.HiddenFor(m=>item.IsDelete)
+                    <tr>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.CreateDate)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.Project)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.Name)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.DueDate)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.CreateBy)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.ProviderList)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.StatusID)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.Remark)
+                        </td>
+                        <td>
+                            @* @Html.ActionLink("History", "History", "Works", new { id = item.ID }, "") | *@
+                            @* @Html.ActionLink("Edit", "Edit", "Works", new { id = item.ID }, "") *@
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    <tr>
+                        @Html.HiddenFor(m => item.ID)
+                        @Html.HiddenFor(m => item.CreateDate)
+                        @Html.HiddenFor(m => item.UpdateDate)
+                        @Html.HiddenFor(m => item.UpdateBy)
+                        @Html.HiddenFor(m => item.IsDelete)
+                        <td>
+                            @Html.DisplayFor(m => item.CreateDate)
+                        </td>
+                        <td>
+                            @Html.EditorFor(m => item.Project)
+                        </td>
+                        <td>
+                            @Html.EditorFor(m => item.Name)
+                        </td>
+                        <td>
+                            @Html.EditorFor(m => item.DueDate)
+                        </td>
+                        <td>
+                            @Html.EditorFor(m => item.CreateBy)
+                        </td>
+                        <td>
+                            @Html.EditorFor(m => item.ProviderList)
+                        </td>
+                        <td>
+                            @Html.EditorFor(m => item.StatusID)
+                        </td>
+                        <td>
+                            @Html.EditorFor(m => item.Remark)
+                        </td>
+                        <td>
+                            <input type="submit" value="submit" class=" btn btn-success" />
+                        </td>
+                    </tr>
+
+                }
+            }
+        }
+    </tbody>
+</table>
