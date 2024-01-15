@@ -9,7 +9,9 @@ namespace AgileRap_Process_Software_ModelV2.Models
         [Required]
         public int StatusID { get; set; }
 
-
+        [DataType(DataType.Date)]
+        [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = true)]
+        public DateTime CreatedDate { get; set; }
     }
     [MetadataType(typeof(WorkMetadata))]
     public partial class Work
@@ -19,6 +21,7 @@ namespace AgileRap_Process_Software_ModelV2.Models
         [NotMapped]
         public bool? IsSelectAll { get; set; }
 
+        [NotMapped]
         [DisplayName("Assign To/Provider")]
         public string? ProviderList
         {
@@ -37,8 +40,8 @@ namespace AgileRap_Process_Software_ModelV2.Models
                 {
                     return null;
                 }
-
             }
+            set => ProviderList = value;
         }
 
     }

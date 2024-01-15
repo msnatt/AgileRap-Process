@@ -118,13 +118,14 @@
                     </select>
                 </td>
                 <td>
-                    @Html.DropDownListFor(m => m.Last().StatusID, new SelectList(ViewBag.StatusBag, "Value", "Text"), "Please Select", new { @class = "form-select" })
+                    @Html.DropDownListFor(m => m.Last().StatusID, new SelectList(ViewBag.StatusBag, "Value", "Text"), "Please Select", new { @class = "form-select" ,style="width : 200px;"})
                 </td>
                 <td>
                     @Html.EditorFor(m => m.Last().Remark)
                 </td>
                 <td>
                     <input type="submit" value="submit" class="btn btn-success" />
+                    @Html.ActionLink("Cancel", "Index", "Works", "",new {@class = "btn btn-danger"})
                 </td>
             </tr>
         }
@@ -136,11 +137,11 @@
 
         $('#select-tops-options').multiselect({
             buttonClass: 'form-select',
-            nonSelectedText: 'Select toppings',
-            buttonContainer: '<div class="btn-danger" id="select-tops-options-container"></div>',
+            nonSelectedText: 'Select Provider',
+            buttonContainer: '<div class="btn-success" id="select-tops-options-container"></div>',
             selectedClass: 'active multiselect-selected',
             numberDisplayed: 5,
-            buttonWidth: '18em',
+            buttonWidth: '10em',
             includeSelectAllOption: true,
             onSelectAll: function (options) {
                 document.getElementById("IsSelectAll").value = true;

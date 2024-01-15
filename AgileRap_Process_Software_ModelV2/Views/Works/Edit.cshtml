@@ -1,7 +1,8 @@
-﻿@model IEnumerable<AgileRap_Process_Software_ModelV2.Models.Work>
+﻿@model AgileRap_Process_Software_ModelV2.Models.Work
 
 @{
     ViewData["Title"] = "Edit";
+    List<Work> ListWork = ViewBag.Model;
 }
 
 <h1>สร้างรายการงาน</h1>
@@ -40,91 +41,82 @@
         </tr>
     </thead>
     <tbody>
-        @using (Html.BeginForm("Edit", "Works", FormMethod.Post, new { id = "manageform", name = "manageform" }))
+
+        @foreach (var item in ListWork)
         {
-            @foreach (var item in Model)
+            if (item.ID != ViewBag.WorkID)
             {
-                if (item.ID != ViewBag.WorkID)
-                {
-                    @Html.HiddenFor(m=>item.ID)
-                    @Html.HiddenFor(m=>item.HeaderID)
-                    @Html.HiddenFor(m=>item.Project)
-                    @Html.HiddenFor(m=>item.Name)
-                    @Html.HiddenFor(m=>item.DueDate)
-                    @Html.HiddenFor(m=>item.CreateBy)
-                    @Html.HiddenFor(m=>item.CreateDate)
-                    @Html.HiddenFor(m=>item.UpdateBy)
-                    @Html.HiddenFor(m=>item.UpdateDate)
-                    @Html.HiddenFor(m=>item.ProviderList)
-                    @Html.HiddenFor(m=>item.Status)
-                    @Html.HiddenFor(m=>item.StatusID)
-                    @Html.HiddenFor(m=>item.Remark)
-                    @Html.HiddenFor(m=>item.IsDelete)
-                    <tr>
-                        <td>
-                            @Html.DisplayFor(modelItem => item.CreateDate)
-                        </td>
-                        <td>
-                            @Html.DisplayFor(modelItem => item.Project)
-                        </td>
-                        <td>
-                            @Html.DisplayFor(modelItem => item.Name)
-                        </td>
-                        <td>
-                            @Html.DisplayFor(modelItem => item.DueDate)
-                        </td>
-                        <td>
-                            @Html.DisplayFor(modelItem => item.CreateBy)
-                        </td>
-                        <td>
-                            @Html.DisplayFor(modelItem => item.ProviderList)
-                        </td>
-                        <td>
-                            @Html.DisplayFor(modelItem => item.StatusID)
-                        </td>
-                        <td>
-                            @Html.DisplayFor(modelItem => item.Remark)
-                        </td>
-                        <td>
-                            @* @Html.ActionLink("History", "History", "Works", new { id = item.ID }, "") | *@
-                            @* @Html.ActionLink("Edit", "Edit", "Works", new { id = item.ID }, "") *@
-                        </td>
-                    </tr>
-                }
-                else
+                <tr>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.CreateDate)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Project)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Name)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.DueDate)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.CreateBy)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.ProviderList)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.StatusID)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Remark)
+                    </td>
+                    <td>
+                        @* @Html.ActionLink("History", "History", "Works", new { id = item.ID }, "") | *@
+                        @* @Html.ActionLink("Edit", "Edit", "Works", new { id = item.ID }, "") *@
+                    </td>
+                </tr>
+            }
+            else
+            {
+                @using (Html.BeginForm("Edit", "Works", FormMethod.Post, new { id = "manageform", name = "manageform" }))
                 {
                     <tr>
-                        @Html.HiddenFor(m => item.ID)
-                        @Html.HiddenFor(m => item.CreateDate)
-                        @Html.HiddenFor(m => item.UpdateDate)
-                        @Html.HiddenFor(m => item.UpdateBy)
-                        @Html.HiddenFor(m => item.IsDelete)
+                        @Html.HiddenFor(m => Model.ID)
+                        @Html.HiddenFor(m => Model.CreateDate)
+                        @Html.HiddenFor(m => Model.UpdateDate)
+                        @Html.HiddenFor(m => Model.UpdateBy)
+                        @Html.HiddenFor(m => Model.IsDelete)
+                        @Html.HiddenFor(m => Model.ProviderIDs)
+                        @Html.HiddenFor(m => Model.IsSelectAll)
                         <td>
-                            @Html.DisplayFor(m => item.CreateDate)
+                            @Html.DisplayFor(m => Model.CreateDate)
                         </td>
                         <td>
-                            @Html.EditorFor(m => item.Project)
+                            @Html.EditorFor(m => Model.Project)
                         </td>
                         <td>
-                            @Html.EditorFor(m => item.Name)
+                            @Html.EditorFor(m => Model.Name)
                         </td>
                         <td>
-                            @Html.EditorFor(m => item.DueDate)
+                            @Html.EditorFor(m => Model.DueDate)
                         </td>
                         <td>
-                            @Html.EditorFor(m => item.CreateBy)
+                            @Html.EditorFor(m => Model.CreateBy)
                         </td>
                         <td>
-                            @Html.EditorFor(m => item.ProviderList)
+                            <select hidden id="select-tops-options" asp-for="ProviderIDs" asp-items="@ViewBag.UserBag" multiple>
+                            </select>
                         </td>
                         <td>
-                            @Html.EditorFor(m => item.StatusID)
+                            @Html.DropDownListFor(m => Model.StatusID, new SelectList(ViewBag.StatusBag, "Value", "Text", item.StatusID), "Please Select", new { @class = "form-select", style = "width : 200px;" })
                         </td>
                         <td>
-                            @Html.EditorFor(m => item.Remark)
+                            @Html.EditorFor(m => Model.Remark)
                         </td>
                         <td>
                             <input type="submit" value="submit" class=" btn btn-success" />
+                            @Html.ActionLink("Cancel", "Index", "Works", "",new {@class = "btn btn-danger"})
                         </td>
                     </tr>
 
@@ -133,3 +125,61 @@
         }
     </tbody>
 </table>
+<script>
+    ﻿document.addEventListener("DOMContentLoaded",
+    () => {
+
+        $('#select-tops-options').multiselect({
+            buttonClass: 'form-select',
+            nonSelectedText: 'Select Provider',
+            buttonContainer: '<div class="btn-success" id="select-tops-options-container"></div>',
+            selectedClass: 'active multiselect-selected',
+            numberDisplayed: 5,
+            buttonWidth: '10em',
+            includeSelectAllOption: true,
+            onSelectAll: function (options) {
+                document.getElementById("IsSelectAll").value = true;
+            },
+            onDeselectAll: function (options) {
+                document.getElementById("IsSelectAll").value = false;
+            },
+            //includeResetOption: true,
+            //selectAllName: 'select-all-name',
+            onChange: function (option, checked) {
+                /*
+                 * Not there yet
+                 */
+                document.getElementById("IsSelectAll").value = false;
+
+                if (checked) {
+                    document.querySelectorAll(`[value="${$(option[0])[0].value}"]`)[1].ariaChecked = "true";
+                    document.querySelectorAll(`[value="${$(option[0])[0].value}"]`)[0].ariaChecked = "true";
+                } else {
+                    document.querySelectorAll(`[value="${$(option[0])[0].value}"]`)[1].ariaChecked = "false";
+                    document.querySelectorAll(`[value="${$(option[0])[0].value}"]`)[0].ariaChecked = "false";
+                }
+                
+                //$("#select-tops-options").multiselect('deselect', '1');
+                var toppings = $('#select-tops-options option:selected');
+
+                var selected = [];
+                $(toppings).each(function (index, item) {
+                    selected.push([$(this).val()]);
+                });
+
+                document.getElementById("ProviderIDs").value = selected.join(',');
+            },
+            templates: {
+                button:
+                    '<button type="button" class="multiselect dropdown-toggle" ' +
+                    'data-bs-toggle="dropdown"><span class="multiselect-selected-text"></span></button>',
+                resetButton: '<div class="multiselect-reset text-center p-2"><button type="button" class="btn btn-sm btn-danger"></button></div>'
+            }
+        });
+
+    });
+
+
+
+</script>
+

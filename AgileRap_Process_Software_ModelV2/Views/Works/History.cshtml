@@ -2,9 +2,10 @@
 
 @{
     ViewData["Title"] = "Index";
+    int count = Model.Count() + 1;
 }
 
-<h1>รายการงาน</h1>
+<h1>History Task Log</h1>
 <br />
 <br />
 
@@ -38,6 +39,10 @@
             <th>
                 @Html.DisplayName("Manage")
             </th>
+            <th class="text-end">
+                @Html.ActionLink("Cancel", "Index", "Works", "", new { @class = "btn btn-danger" })
+            </th>
+
         </tr>
     </thead>
     <tbody>
@@ -72,6 +77,37 @@
                     @Html.ActionLink("Edit", "Edit", "Works", new { id = item.ID }, new { @class = "btn btn-outline-secondary" }) |
                     @Html.ActionLink("History", "History", "Works", new { id = item.ID }, new { @class = "btn btn-outline-secondary" })
                 </td>
+                @if (item == Model.First())
+                {
+                    <td rowspan="@count">
+                        <div class="text-end">
+                        </div>
+                        <table class="table table-active">
+                            <thead>
+                                <tr>
+                                    <th>
+                                        @Html.DisplayName("No");
+                                    </th>
+                                    <th>
+                                        @Html.DisplayName("Description");
+                                    </th>
+                                </tr>
+                            </thead>
+                            @foreach (WorkLog itemWorkLog in Model.Where(b => b.ID == ViewBag.IDBag).First().WorkLog)
+                            {
+                                <tr>
+                                    <td>
+                                        @Html.DisplayFor(m => itemWorkLog.No)
+                                    </td>
+                                    <td>
+                                        @Html.DisplayFor(m => itemWorkLog.Description)
+                                    </td>
+                                </tr>
+                            }
+                        </table>
+                    </td>
+                }
+
             </tr>
         }
         <tr>
