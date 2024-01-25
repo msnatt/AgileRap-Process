@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AgileRap_Process_Software_ModelV2.Models
@@ -6,7 +7,7 @@ namespace AgileRap_Process_Software_ModelV2.Models
     public class WorkLogMetadata
     {
     }
-    [MetadataType(typeof(WorkLogMetadata))]
+    [ModelMetadataType(typeof(WorkLogMetadata))]
     public partial class WorkLog
     {
         [NotMapped]

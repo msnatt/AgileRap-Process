@@ -30,8 +30,8 @@ build_property._RazorSourceGeneratorDebug =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxJbmRleC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/63114540387/ASPdotNet/AgileRap_Process_Software_ModelV2/AgileRap_Process_Software_ModelV2/Views/Home/Privacy.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxQcml2YWN5LmNzaHRtbA==
+[D:/63114540387/ASPdotNet/AgileRap_Process_Software_ModelV2/AgileRap_Process_Software_ModelV2/Views/Home/Register.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxSZWdpc3Rlci5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
 [D:/63114540387/ASPdotNet/AgileRap_Process_Software_ModelV2/AgileRap_Process_Software_ModelV2/Views/Shared/Error.cshtml]
@@ -52,6 +52,10 @@ build_metadata.AdditionalFiles.CssScope =
 
 [D:/63114540387/ASPdotNet/AgileRap_Process_Software_ModelV2/AgileRap_Process_Software_ModelV2/Views/Works/EditorTemplates/Provider.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcV29ya3NcRWRpdG9yVGVtcGxhdGVzXFByb3ZpZGVyLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/63114540387/ASPdotNet/AgileRap_Process_Software_ModelV2/AgileRap_Process_Software_ModelV2/Views/Works/EditorTemplates/Work.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcV29ya3NcRWRpdG9yVGVtcGxhdGVzXFdvcmsuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
 [D:/63114540387/ASPdotNet/AgileRap_Process_Software_ModelV2/AgileRap_Process_Software_ModelV2/Views/Works/History.cshtml]

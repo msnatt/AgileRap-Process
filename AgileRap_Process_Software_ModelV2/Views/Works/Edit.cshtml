@@ -3,11 +3,22 @@
 @{
     ViewData["Title"] = "Edit";
     List<Work> ListWork = ViewBag.Model;
+    List<SelectListItem> UserBag = ViewBag.UserBag;
+    Microsoft.EntityFrameworkCore.Query.Internal.EntityQueryable<User> Luser = ViewBag.UserLogin;
 }
 
-<h1>สร้างรายการงาน</h1>
+<div class="row">
+    <div class="offset-md-1 col-md-3">
+        <h1>แก้ไขรายการงาน</h1>
+    </div>
+    <div class="col-md-8 text-end">
+        @Luser.First().Name
+        @Html.ActionLink("Logout", "Index", "Home", new { }, new { @class = "btn-outline-secondary" })
+    </div>
+</div>
 <br />
 <br />
+
 <table class="table table-borlesses">
     <thead>
         <tr>
@@ -41,14 +52,13 @@
         </tr>
     </thead>
     <tbody>
-
         @foreach (var item in ListWork)
         {
             if (item.ID != ViewBag.WorkID)
             {
                 <tr>
                     <td>
-                        @Html.DisplayFor(modelItem => item.CreateDate)
+                        @Html.DisplayFor(modelItem => item.CreateDateText)
                     </td>
                     <td>
                         @Html.DisplayFor(modelItem => item.Project)
@@ -57,16 +67,16 @@
                         @Html.DisplayFor(modelItem => item.Name)
                     </td>
                     <td>
-                        @Html.DisplayFor(modelItem => item.DueDate)
+                        @Html.DisplayFor(modelItem => item.DueDateText)
                     </td>
                     <td>
-                        @Html.DisplayFor(modelItem => item.CreateBy)
+                        @Html.DisplayFor(modelItem => UserBag.Where(b => b.Value == item.CreateBy.ToString()).First().Text)
                     </td>
                     <td>
                         @Html.DisplayFor(modelItem => item.ProviderList)
                     </td>
                     <td>
-                        @Html.DisplayFor(modelItem => item.StatusID)
+                        @Html.DisplayFor(modelItem => item.Status.StatusName)
                     </td>
                     <td>
                         @Html.DisplayFor(modelItem => item.Remark)
@@ -81,105 +91,70 @@
             {
                 @using (Html.BeginForm("Edit", "Works", FormMethod.Post, new { id = "manageform", name = "manageform" }))
                 {
-                    <tr>
-                        @Html.HiddenFor(m => Model.ID)
-                        @Html.HiddenFor(m => Model.CreateDate)
-                        @Html.HiddenFor(m => Model.UpdateDate)
-                        @Html.HiddenFor(m => Model.UpdateBy)
-                        @Html.HiddenFor(m => Model.IsDelete)
-                        @Html.HiddenFor(m => Model.ProviderIDs)
-                        @Html.HiddenFor(m => Model.IsSelectAll)
-                        <td>
-                            @Html.DisplayFor(m => Model.CreateDate)
-                        </td>
-                        <td>
-                            @Html.EditorFor(m => Model.Project)
-                        </td>
-                        <td>
-                            @Html.EditorFor(m => Model.Name)
-                        </td>
-                        <td>
-                            @Html.EditorFor(m => Model.DueDate)
-                        </td>
-                        <td>
-                            @Html.EditorFor(m => Model.CreateBy)
-                        </td>
-                        <td>
-                            <select hidden id="select-tops-options" asp-for="ProviderIDs" asp-items="@ViewBag.UserBag" multiple>
-                            </select>
-                        </td>
-                        <td>
-                            @Html.DropDownListFor(m => Model.StatusID, new SelectList(ViewBag.StatusBag, "Value", "Text", item.StatusID), "Please Select", new { @class = "form-select", style = "width : 200px;" })
-                        </td>
-                        <td>
-                            @Html.EditorFor(m => Model.Remark)
-                        </td>
-                        <td>
-                            <input type="submit" value="submit" class=" btn btn-success" />
-                            @Html.ActionLink("Cancel", "Index", "Works", "",new {@class = "btn btn-danger"})
-                        </td>
-                    </tr>
-
+                    @Html.EditorFor(m => m, "Work", "Work")
                 }
             }
         }
     </tbody>
 </table>
+
+
+
 <script>
-    ﻿document.addEventListener("DOMContentLoaded",
-    () => {
+    document.addEventListener("DOMContentLoaded",
+        () => {
+            $('#select-tops-options').multiselect({
+                buttonClass: 'form-select',
+                nonSelectedText: 'Select Provider',
+                buttonContainer: '<div class="btn-success" id="select-tops-options-container"></div>',
+                selectedClass: 'active multiselect-selected',
+                numberDisplayed: 5,
+                buttonWidth: '10em',
+                includeSelectAllOption: true,
+                onSelectAll: function (options) {
+                    document.getElementById("Work_IsSelectAll").value = true;
+                },
+                onDeselectAll: function (options) {
+                    document.getElementById("Work_IsSelectAll").value = false;
+                },
+                //includeResetOption: true,
+                //selectAllName: 'select-all-name',
+                onload: function () {
+                    var st = document.getElementById("Work_providerIDs").value.split(',');
+                    console.log(st);
+                },
 
-        $('#select-tops-options').multiselect({
-            buttonClass: 'form-select',
-            nonSelectedText: 'Select Provider',
-            buttonContainer: '<div class="btn-success" id="select-tops-options-container"></div>',
-            selectedClass: 'active multiselect-selected',
-            numberDisplayed: 5,
-            buttonWidth: '10em',
-            includeSelectAllOption: true,
-            onSelectAll: function (options) {
-                document.getElementById("IsSelectAll").value = true;
-            },
-            onDeselectAll: function (options) {
-                document.getElementById("IsSelectAll").value = false;
-            },
-            //includeResetOption: true,
-            //selectAllName: 'select-all-name',
-            onChange: function (option, checked) {
-                /*
-                 * Not there yet
-                 */
-                document.getElementById("IsSelectAll").value = false;
+                onChange: function (option, checked) {
+                    /*
+                     * Not there yet
+                     */
+                    document.getElementById("Work_IsSelectAll").value = false;
 
-                if (checked) {
-                    document.querySelectorAll(`[value="${$(option[0])[0].value}"]`)[1].ariaChecked = "true";
-                    document.querySelectorAll(`[value="${$(option[0])[0].value}"]`)[0].ariaChecked = "true";
-                } else {
-                    document.querySelectorAll(`[value="${$(option[0])[0].value}"]`)[1].ariaChecked = "false";
-                    document.querySelectorAll(`[value="${$(option[0])[0].value}"]`)[0].ariaChecked = "false";
+                    if (checked) {
+                        document.querySelectorAll(`[value="${$(option[0])[0].value}"]`)[1].ariaChecked = "true";
+                        document.querySelectorAll(`[value="${$(option[0])[0].value}"]`)[0].ariaChecked = "true";
+                    } else {
+                        document.querySelectorAll(`[value="${$(option[0])[0].value}"]`)[1].ariaChecked = "false";
+                        document.querySelectorAll(`[value="${$(option[0])[0].value}"]`)[0].ariaChecked = "false";
+                    }
+
+                    //$("#select-tops-options").multiselect('deselect', '1');
+                    var toppings = $('#select-tops-options option:selected');
+
+                    var selected = [];
+                    $(toppings).each(function (index, item) {
+                        selected.push([$(this).val()]);
+                    });
+
+                    document.getElementById("Work_ProviderIDs").value = selected.join(',');
+                },
+                templates: {
+                    button:
+                        '<button type="button" class="multiselect dropdown-toggle" ' +
+                        'data-bs-toggle="dropdown"><span class="multiselect-selected-text"></span></button>',
+                    resetButton: '<div class="multiselect-reset text-center p-2"><button type="button" class="btn btn-sm btn-danger"></button></div>'
                 }
-                
-                //$("#select-tops-options").multiselect('deselect', '1');
-                var toppings = $('#select-tops-options option:selected');
-
-                var selected = [];
-                $(toppings).each(function (index, item) {
-                    selected.push([$(this).val()]);
-                });
-
-                document.getElementById("ProviderIDs").value = selected.join(',');
-            },
-            templates: {
-                button:
-                    '<button type="button" class="multiselect dropdown-toggle" ' +
-                    'data-bs-toggle="dropdown"><span class="multiselect-selected-text"></span></button>',
-                resetButton: '<div class="multiselect-reset text-center p-2"><button type="button" class="btn btn-sm btn-danger"></button></div>'
-            }
-        });
-
-    });
-
-
-
+            });
+        }
+    );
 </script>
-

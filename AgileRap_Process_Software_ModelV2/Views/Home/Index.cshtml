@@ -1,8 +1,41 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
-}
+﻿@model AgileRap_Process_Software_ModelV2.Models.User
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+@{
+    ViewData["Title"] = "Home Page";
+    var Text = ViewBag.MassageWrong;
+}
+<h1>Login</h1>
+<br />
+<br />
+
+@using (Html.BeginForm("Login", "Home", FormMethod.Post, new { @class = "form-horizontal" }))
+{
+    <div class="row">
+        <div class="offset-md-2 col-md-1 text-end">
+            @Html.LabelFor(m => m.Email)
+        </div>
+        <div class="col-md-2">
+            @Html.EditorFor(m => m.Email, new { HtmlAttributes = new { @class = "form-control" } })
+        </div>
+    </div>
+    <div class="row">
+        <div class="offset-md-2 col-md-1 text-end">
+            @Html.LabelFor(m => m.Password)
+        </div>
+        <div class="col-md-2">
+            @Html.EditorFor(m => m.Password, new { HtmlAttributes = new { @class = "form-control" } })
+        </div>
+    </div>
+    <div class="row offset-md-3 col-md-4 text-danger">
+        @Text
+    </div>
+    <br />
+    <div class="row">
+        <div class="offset-md-3 col-md-1">
+            @Html.ActionLink("Register", "Register", "Home", new { }, new { @class = "text-black" })
+        </div>
+        <div class="col-md-1 text-end">
+            <input value="Login" type="submit" class="btn-outline-secondary text-black" />
+        </div>
+    </div>
+}

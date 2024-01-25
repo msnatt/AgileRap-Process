@@ -27,6 +27,7 @@
         //Mom
         public virtual Status Status { get; set; }
         //Childen
+        //public virtual ICollection<Work> SubWork { get; set; }
         public virtual ICollection<Provider> Provider { get; set; }
         public virtual ICollection<WorkLog> WorkLog  { get; set; }
 

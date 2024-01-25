@@ -1,0 +1,60 @@
+﻿@model AgileRap_Process_Software_ModelV2.Models.Work
+@{
+    var i = 0;
+    Microsoft.EntityFrameworkCore.Query.Internal.EntityQueryable<User> Luser = ViewBag.UserLogin;
+}
+
+
+@Html.HiddenFor(m => m.ID)
+@Html.HiddenFor(m => m.CreateDate)
+@Html.HiddenFor(m => m.UpdateDate)
+@Html.HiddenFor(m => m.UpdateBy)
+@Html.HiddenFor(m => m.IsDelete)
+@Html.HiddenFor(m => m.ProviderIDs)
+@Html.HiddenFor(m => m.IsSelectAll)
+@Html.HiddenFor(m => m.UserLoginID)
+@Html.Hidden("UserID", Luser.First().ID)
+
+
+
+<tr>
+    <td>
+        @Html.DisplayFor(m => m.CreateDateText, new { htmlAttributes = new { @class = "form-control" } })
+    </td>
+    <td>
+        @Html.EditorFor(m => m.Project, new { htmlAttributes = new { @class = "form-control" } })
+    </td>
+    <td>
+        @Html.EditorFor(m => m.Name, new { htmlAttributes = new { @class = "form-control" } })
+    </td>
+    <td>
+        @Html.EditorFor(m => m.DueDate, new { htmlAttributes = new { @class = "form-control", @style = "width:200px" } })
+    </td>
+    <td>
+        @Html.DropDownListFor(m => m.CreateBy, new SelectList(ViewBag.UserBag, "Value", "Text", Model.CreateBy), "Select", new { @class = "", @style = "width:100px", hidden = "hidden" })
+        @Html.DropDownList("createby", new SelectList(ViewBag.UserBag, "Value", "Text", Model.CreateBy), "Select", new { @class = "form-select", @style = "width:100px", disabled = "disabled" })
+    </td>
+    <td>
+        <select id="select-tops-options" hidden asp-items="@ViewBag.UserBag" multiple>
+        </select>
+    </td>
+    <td>
+
+        @Html.DropDownListFor(m => m.StatusID, new SelectList(ViewBag.StatusBag, "Value", "Text", Model.StatusID), "Please Select", new { @class = "form-select", style = "width:150px;" })
+    </td>
+    <td>
+        @Html.EditorFor(m => m.Remark, new { htmlAttributes = new { @class = "form-control " } })
+    </td>
+    <td>
+        <input type="submit" value="submit" class=" btn btn-success" />
+        @Html.ActionLink("Cancel", "Index", "Works", new { id = Luser.First().ID }, new { @class = "btn btn-danger" })
+    </td>
+</tr>
+
+@* @Html.EditorFor(m => m.Provider) *@
+<div>
+    @foreach (var item in Model.Provider)
+    {
+        @Html.EditorFor(m => item, "Provider", "Provider[" + i++ + "]")
+    }
+</div>

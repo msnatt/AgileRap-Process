@@ -3,9 +3,26 @@
 @{
     ViewData["Title"] = "Index";
     int count = Model.Count() + 1;
-}
+    Microsoft.EntityFrameworkCore.Query.Internal.EntityQueryable<SelectListItem> UserBag = ViewBag.UserBag;
+    Microsoft.EntityFrameworkCore.Query.Internal.EntityQueryable<User> Luser = ViewBag.UserLogin;
 
-<h1>History Task Log</h1>
+}
+<style>
+    .pre-lines {
+        white-space: pre-line;
+    }
+</style>
+
+<div class="row">
+    <div class="offset-md-1 col-md-3">
+        <h1>History Task Log</h1>
+    </div>
+    <div class="col-md-8 text-end">
+        @Luser.First().Name
+        @Html.ActionLink("Logout", "Index", "Home", new { }, new { @class = "btn-outline-secondary" })
+    </div>
+</div>
+
 <br />
 <br />
 
@@ -25,7 +42,7 @@
                 @Html.DisplayNameFor(model => model.DueDate)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.CreateBy)
+                @Html.DisplayNameFor(model => UserBag.Where(b => b.Value == model.CreateBy.ToString()).First().Text)
             </th>
             <th>
                 @Html.DisplayNameFor(model => model.ProviderList)
@@ -40,7 +57,7 @@
                 @Html.DisplayName("Manage")
             </th>
             <th class="text-end">
-                @Html.ActionLink("Cancel", "Index", "Works", "", new { @class = "btn btn-danger" })
+                @Html.ActionLink("Cancel", "Index", "Works", new {id = Luser.First().ID}, new { @class = "btn btn-danger" })
             </th>
 
         </tr>
@@ -50,7 +67,7 @@
         {
             <tr>
                 <td>
-                    @Html.DisplayFor(modelItem => item.CreateDate)
+                    @Html.DisplayFor(modelItem => item.CreateDateText)
                 </td>
                 <td>
                     @Html.DisplayFor(modelItem => item.Project)
@@ -59,7 +76,7 @@
                     @Html.DisplayFor(modelItem => item.Name)
                 </td>
                 <td>
-                    @Html.DisplayFor(modelItem => item.DueDate)
+                    @Html.DisplayFor(modelItem => item.DueDateText)
                 </td>
                 <td>
                     @Html.DisplayFor(modelItem => item.CreateBy)
@@ -74,22 +91,22 @@
                     @Html.DisplayFor(modelItem => item.Remark)
                 </td>
                 <td>
-                    @Html.ActionLink("Edit", "Edit", "Works", new { id = item.ID }, new { @class = "btn btn-outline-secondary" }) |
-                    @Html.ActionLink("History", "History", "Works", new { id = item.ID }, new { @class = "btn btn-outline-secondary" })
+                    @Html.ActionLink("Edit", "Edit", "Works", new { id = item.ID, UserID = Luser.First().ID }, new { @class = "btn btn-outline-secondary" }) |
+                    @Html.ActionLink("History", "History", "Works", new { id = item.ID, UserID = Luser.First().ID }, new { @class = "btn btn-outline-secondary" })
                 </td>
                 @if (item == Model.First())
                 {
-                    <td rowspan="@count">
+                    <td rowspan="@count" width="400px">
                         <div class="text-end">
                         </div>
-                        <table class="table table-active">
+                        <table class="table table-active pre-lines">
                             <thead>
                                 <tr>
-                                    <th>
-                                        @Html.DisplayName("No");
+                                    <th class="text-center">
+                                        @Html.DisplayName("No")
                                     </th>
-                                    <th>
-                                        @Html.DisplayName("Description");
+                                    <th class="text-center">
+                                        @Html.DisplayName("Description")
                                     </th>
                                 </tr>
                             </thead>
@@ -112,7 +129,7 @@
         }
         <tr>
             <td class="text-center">
-                @Html.ActionLink("Create Task", "Create", "Works", new { }, new { @class = "btn btn-outline-primary" })
+                @Html.ActionLink("Create Task", "Create", "Works",new { UserID = Luser.First().ID }, new { @class = "btn btn-outline-primary" })
             </td>
             <td></td>
             <td></td>

@@ -2,6 +2,10 @@
 {
     public partial class Provider
     {
+        public Provider() 
+        {
+            
+        }
         public int ID { get; set; }
         public int WorkID { get; set; }
         public int UserID { get; set; }

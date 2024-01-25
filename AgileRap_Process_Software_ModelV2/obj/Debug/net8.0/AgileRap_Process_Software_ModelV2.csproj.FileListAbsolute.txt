@@ -253,3 +253,10 @@ D:\63114540387\ASPdotNet\AgileRap_Process_Software_ModelV2\AgileRap_Process_Soft
 D:\63114540387\ASPdotNet\AgileRap_Process_Software_ModelV2\AgileRap_Process_Software_ModelV2\bin\Debug\net8.0\runtimes\win\lib\net7.0\System.Security.Cryptography.ProtectedData.dll
 D:\63114540387\ASPdotNet\AgileRap_Process_Software_ModelV2\AgileRap_Process_Software_ModelV2\bin\Debug\net8.0\runtimes\win\lib\net7.0\System.Windows.Extensions.dll
 D:\63114540387\ASPdotNet\AgileRap_Process_Software_ModelV2\AgileRap_Process_Software_ModelV2\obj\Debug\net8.0\AgileRap_Process_Software_ModelV2.sourcelink.json
+D:\63114540387\ASPdotNet\AgileRap_Process_Software_ModelV2\AgileRap_Process_Software_ModelV2\bin\Debug\net8.0\Microsoft.AspNetCore.Authorization.dll
+D:\63114540387\ASPdotNet\AgileRap_Process_Software_ModelV2\AgileRap_Process_Software_ModelV2\bin\Debug\net8.0\Microsoft.AspNetCore.Components.dll
+D:\63114540387\ASPdotNet\AgileRap_Process_Software_ModelV2\AgileRap_Process_Software_ModelV2\bin\Debug\net8.0\Microsoft.AspNetCore.Components.Forms.dll
+D:\63114540387\ASPdotNet\AgileRap_Process_Software_ModelV2\AgileRap_Process_Software_ModelV2\bin\Debug\net8.0\Microsoft.AspNetCore.Components.Web.dll
+D:\63114540387\ASPdotNet\AgileRap_Process_Software_ModelV2\AgileRap_Process_Software_ModelV2\bin\Debug\net8.0\Microsoft.AspNetCore.Metadata.dll
+D:\63114540387\ASPdotNet\AgileRap_Process_Software_ModelV2\AgileRap_Process_Software_ModelV2\bin\Debug\net8.0\Microsoft.Extensions.Options.dll
+D:\63114540387\ASPdotNet\AgileRap_Process_Software_ModelV2\AgileRap_Process_Software_ModelV2\bin\Debug\net8.0\Microsoft.JSInterop.dll

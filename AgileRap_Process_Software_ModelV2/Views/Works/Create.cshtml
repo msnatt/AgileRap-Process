@@ -2,40 +2,49 @@
 
 @{
     ViewData["Title"] = "Create";
+    Microsoft.EntityFrameworkCore.Query.Internal.EntityQueryable<SelectListItem> UserBag = ViewBag.UserBag;
+    Microsoft.EntityFrameworkCore.Query.Internal.EntityQueryable<User> Luser = ViewBag.UserLogin;
 }
 
-
-<h1>สร้างรายการงาน</h1>
+<div class="row">
+    <div class="offset-md-1 col-md-3">
+        <h1>สร้างรายการงาน</h1>
+    </div>
+    <div class="col-md-8 text-end">
+        @Luser.First().Name
+        @Html.ActionLink("Logout", "Index", "Home", new { }, new { @class = "btn-outline-secondary" })
+    </div>
+</div>
 <br />
 <br />
 <table class="table table-borlesses">
     <thead>
         <tr>
-            <th>
+            <th width="120px" class="text-center">
                 @Html.DisplayNameFor(model => model.CreateDate)
             </th>
-            <th>
+            <th width="150px" class="text-center">
                 @Html.DisplayNameFor(model => model.Project)
             </th>
-            <th>
+            <th width="200px" class="text-center">
                 @Html.DisplayNameFor(model => model.Name)
-            </th>
-            <th>
+            </th >
+            <th class="text-center">
                 @Html.DisplayNameFor(model => model.DueDate)
             </th>
-            <th>
+            <th class="text-center">
                 @Html.DisplayNameFor(model => model.CreateBy)
             </th>
-            <th>
+            <th class="text-center">
                 @Html.DisplayNameFor(model => model.ProviderList)
             </th>
-            <th>
+            <th class="text-center">
                 @Html.DisplayNameFor(model => model.StatusID)
-            </th>
-            <th>
+            </th >
+            <th width="400px" class="text-center">
                 @Html.DisplayNameFor(model => model.Remark)
             </th>
-            <th>
+            <th width="100px" class="text-center">
                 @Html.DisplayName("Manage")
             </th>
         </tr>
@@ -43,42 +52,27 @@
     <tbody>
         @foreach (var item in Model.Where(m => m != Model.Last()))
         {
-            @Html.HiddenFor(m => item.ID)
-            @Html.HiddenFor(m => item.HeaderID)
-            @Html.HiddenFor(m => item.Project)
-            @Html.HiddenFor(m => item.Name)
-            @Html.HiddenFor(m => item.DueDate)
-            @Html.HiddenFor(m => item.CreateBy)
-            @Html.HiddenFor(m => item.CreateDate)
-            @Html.HiddenFor(m => item.UpdateBy)
-            @Html.HiddenFor(m => item.UpdateDate)
-            @Html.HiddenFor(m => item.ProviderList)
-            @Html.HiddenFor(m => item.Status)
-            @Html.HiddenFor(m => item.StatusID)
-            @Html.HiddenFor(m => item.Remark)
-            @Html.HiddenFor(m => item.IsDelete)
-
             <tr>
-                <td>
-                    @Html.DisplayFor(modelItem => item.CreateDate)
+                <td width="100px" class="text-center">
+                    @Html.DisplayFor(modelItem => item.CreateDateText)
                 </td>
-                <td>
+                <td width="80px" class="text-center">
                     @Html.DisplayFor(modelItem => item.Project)
                 </td>
-                <td>
+                <td width="70px" class="text-center">
                     @Html.DisplayFor(modelItem => item.Name)
                 </td>
-                <td >
-                    @Html.DisplayFor(modelItem => item.DueDate)
+                <td width="50px" class="text-center">
+                    @Html.DisplayFor(modelItem => item.DueDateText)
                 </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.CreateBy)
+                <td class="text-center">
+                    @Html.DisplayFor(modelItem => UserBag.Where(b =>b.Value == item.CreateBy.ToString()).First().Text)
                 </td>
-                <td>
+                <td class="text-center">
                     @Html.DisplayFor(modelItem => item.ProviderList)
                 </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.StatusID)
+                <td class="text-center">
+                    @Html.DisplayFor(modelItem => item.Status.StatusName)
                 </td>
                 <td>
                     @Html.DisplayFor(modelItem => item.Remark)
@@ -93,39 +87,44 @@
         {
             <tr>
                 @Html.HiddenFor(m => m.Last().ID)
+                @Html.HiddenFor(m => m.Last().CreateBy)
                 @Html.HiddenFor(m => m.Last().CreateDate)
                 @Html.HiddenFor(m => m.Last().UpdateDate)
                 @Html.HiddenFor(m => m.Last().IsDelete)
                 @Html.HiddenFor(m => m.Last().ProviderIDs)
                 @Html.HiddenFor(m => m.Last().IsSelectAll)
-                <td>
-                    @Html.DisplayFor(m => m.Last().CreateDate)
+                @Html.HiddenFor(m => m.Last().UserLoginID)
+                @Html.Hidden("UserID", Luser.First().ID)
+
+                <td class="text-center">
+                    @Html.DisplayFor(m => m.Last().CreateDateText)
                 </td>
                 <td>
-                    @Html.EditorFor(m => m.Last().Project)
+                    @Html.EditorFor(m => m.Last().Project,new {htmlAttributes = new {@class = "form-control" }})
                 </td>
                 <td>
-                    @Html.EditorFor(m => m.Last().Name)
+                    @Html.EditorFor(m => m.Last().Name ,new {htmlAttributes = new {@class = "form-control" }})
                 </td>  
                 <td>
-                    @Html.EditorFor(m => m.Last().DueDate)
+                    @Html.EditorFor(m => m.Last().DueDate ,new {htmlAttributes = new {@class = "form-control", @style = "width:150px" }})
                 </td>
                 <td>
-                    @Html.EditorFor(m => m.Last().CreateBy)
+                    @Html.DropDownListFor(m => m.Last().CreateBy,new SelectList(ViewBag.UserBag,"Value","Text",Model.Last().CreateBy),"Select",new {@class = "", @style = "width:100px", hidden="hidden"})
+                    @Html.DropDownList("createby",new SelectList(ViewBag.UserBag,"Value","Text",Model.Last().CreateBy),"Select",new {@class = "form-select", @style = "width:100px", disabled = "disabled"})
                 </td>
                 <td>
-                    <select hidden id="select-tops-options" asp-items="@ViewBag.UserBag" multiple>
+                    <select hidden id="select-tops-options" asp-items="@ViewBag.UserBag" multiple >
                     </select>
                 </td>
                 <td>
-                    @Html.DropDownListFor(m => m.Last().StatusID, new SelectList(ViewBag.StatusBag, "Value", "Text"), "Please Select", new { @class = "form-select" ,style="width : 200px;"})
+                    @Html.DropDownListFor(m => m.Last().StatusID, new SelectList(ViewBag.StatusBag, "Value", "Text"), "Please Select", new { @class = "form-select" ,style="width : 150px;"})
                 </td>
                 <td>
-                    @Html.EditorFor(m => m.Last().Remark)
+                    @Html.EditorFor(m => m.Last().Remark ,new {htmlAttributes = new {@class = "form-control" }})
                 </td>
                 <td>
-                    <input type="submit" value="submit" class="btn btn-success" />
-                    @Html.ActionLink("Cancel", "Index", "Works", "",new {@class = "btn btn-danger"})
+                    <input type="submit" value="submit" class="btn btn-success" style="width:100px" />
+                    @Html.ActionLink("Cancel", "Index", "Works", new {id = Luser.First().ID},new {@class = "btn btn-danger", style = "width:100px"})
                 </td>
             </tr>
         }
