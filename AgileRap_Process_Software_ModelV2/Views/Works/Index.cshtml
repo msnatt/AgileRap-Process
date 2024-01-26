@@ -6,10 +6,10 @@
     Microsoft.EntityFrameworkCore.Query.Internal.EntityQueryable<User> Luser = ViewBag.UserLogin;
 }
 <div class="row">
-    <div class="offset-md-1 col-md-3">
+    <div class="col-md-3">
         <h1>รายการงาน</h1>
     </div>
-    <div class="col-md-8 text-end">
+    <div class="col-md-9 text-end">
         @Luser.First().Name
         @Html.ActionLink("Logout", "Index", "Home", new { }, new { @class = "btn-outline-secondary" })
     </div>

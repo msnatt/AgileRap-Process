@@ -34,38 +34,9 @@ namespace AgileRap_Process_Software_ModelV2.Models
 
         [NotMapped]
         [DisplayName("Assign To/Provider")]
-        public string? ProviderList
-        {
-            get
-            {
-                if (Provider.Count > 0)
-                {
-                    if (Provider.First().User != null)
-                    {
-                        var temp = Provider.First().User.Name;
-                        foreach (var item in Provider.Where(m => m.ID != Provider.First().ID))
-                        {
-                            temp += temp + ", " + item.User.Name;
-                        }
-                        return temp;
-                    }
-                    else
-                    {
-                        return "";
-                    }
-                }
-                else
-                {
-
-                    return "";
-                }
-            }
-            set => ProviderList = value;
-        }
-
+        public string? ProviderList { get; set; }
         public void Insert(AgileRap_Process_Software_Context db)
         {
-
             this.CreateDate = DateTime.Now;
             this.UpdateDate = DateTime.Now;
             this.IsDelete = false;

@@ -12,5 +12,7 @@ namespace AgileRap_Process_Software_ModelV2.Models
     {
         [NotMapped]
         public string? Description { get; set; }
+        [NotMapped]
+        public string? ProviderList { get; set; }
     }
 }

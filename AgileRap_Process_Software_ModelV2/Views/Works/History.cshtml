@@ -42,7 +42,7 @@
                 @Html.DisplayNameFor(model => model.DueDate)
             </th>
             <th>
-                @Html.DisplayNameFor(model => UserBag.Where(b => b.Value == model.CreateBy.ToString()).First().Text)
+                @Html.DisplayNameFor(model => model.CreateBy)
             </th>
             <th>
                 @Html.DisplayNameFor(model => model.ProviderList)
@@ -53,11 +53,8 @@
             <th>
                 @Html.DisplayNameFor(model => model.Remark)
             </th>
-            <th>
-                @Html.DisplayName("Manage")
-            </th>
             <th class="text-end">
-                @Html.ActionLink("Cancel", "Index", "Works", new {id = Luser.First().ID}, new { @class = "btn btn-danger" })
+                @Html.ActionLink("Close", "Index", "Works", new { id = Luser.First().ID }, new { @class = "btn btn-danger" })
             </th>
 
         </tr>
@@ -79,7 +76,7 @@
                     @Html.DisplayFor(modelItem => item.DueDateText)
                 </td>
                 <td>
-                    @Html.DisplayFor(modelItem => item.CreateBy)
+                    @Html.DisplayFor(modelItem => UserBag.Where(b => b.Value == item.CreateBy.ToString()).First().Text)
                 </td>
                 <td>
                     @Html.DisplayFor(modelItem => item.ProviderList)
@@ -90,10 +87,6 @@
                 <td>
                     @Html.DisplayFor(modelItem => item.Remark)
                 </td>
-                <td>
-                    @Html.ActionLink("Edit", "Edit", "Works", new { id = item.ID, UserID = Luser.First().ID }, new { @class = "btn btn-outline-secondary" }) |
-                    @Html.ActionLink("History", "History", "Works", new { id = item.ID, UserID = Luser.First().ID }, new { @class = "btn btn-outline-secondary" })
-                </td>
                 @if (item == Model.First())
                 {
                     <td rowspan="@count" width="400px">
@@ -102,25 +95,27 @@
                         <table class="table table-active pre-lines">
                             <thead>
                                 <tr>
-                                    <th class="text-center">
+                                    <th class="text-center" width="10px">
                                         @Html.DisplayName("No")
                                     </th>
-                                    <th class="text-center">
+                                    <th class="text-start" width="300px">
                                         @Html.DisplayName("Description")
                                     </th>
                                 </tr>
                             </thead>
-                            @foreach (WorkLog itemWorkLog in Model.Where(b => b.ID == ViewBag.IDBag).First().WorkLog)
-                            {
-                                <tr>
-                                    <td>
-                                        @Html.DisplayFor(m => itemWorkLog.No)
-                                    </td>
-                                    <td>
-                                        @Html.DisplayFor(m => itemWorkLog.Description)
-                                    </td>
-                                </tr>
-                            }
+                            <tbody>
+                                @foreach (WorkLog itemWorkLog in Model.Where(b => b.ID == ViewBag.IDBag).First().WorkLog)
+                                {
+                                    <tr>
+                                        <td width="10px">
+                                            @Html.DisplayFor(m => itemWorkLog.No)
+                                        </td>
+                                        <td>
+                                            @Html.DisplayFor(m => itemWorkLog.Description)
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
                         </table>
                     </td>
                 }
@@ -129,9 +124,8 @@
         }
         <tr>
             <td class="text-center">
-                @Html.ActionLink("Create Task", "Create", "Works",new { UserID = Luser.First().ID }, new { @class = "btn btn-outline-primary" })
+                @Html.ActionLink("Create Task", "Create", "Works", new { UserID = Luser.First().ID }, new { @class = "btn btn-outline-primary" })
             </td>
-            <td></td>
             <td></td>
             <td></td>
             <td></td>

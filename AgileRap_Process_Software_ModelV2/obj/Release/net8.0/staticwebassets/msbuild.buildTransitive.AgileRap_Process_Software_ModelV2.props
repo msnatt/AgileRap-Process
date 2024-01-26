@@ -1,0 +1,3 @@
+﻿<Project>
+  <Import Project="..\buildMultiTargeting\AgileRap_Process_Software_ModelV2.props" />
+</Project>

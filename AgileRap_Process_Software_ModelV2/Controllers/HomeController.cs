@@ -22,12 +22,12 @@ namespace AgileRap_Process_Software_ModelV2.Controllers
             {
                 var UserSelected = db.User.Where(b => b.Email == user.Email && b.Password == user.Password).First();
 
-                HttpContext.Session.SetInt32("UserID",  UserSelected.ID);
+                HttpContext.Session.SetInt32("UserID", UserSelected.ID);
 
                 return RedirectToAction("Index", "Works");
             }
             ViewBag.MassageWrong = "Email or Password Wrong! Please try again.";
-            return View("Index",user);
+            return View("Index", user);
         }
         [HttpGet]
         public ActionResult Register()
@@ -44,8 +44,20 @@ namespace AgileRap_Process_Software_ModelV2.Controllers
                 db.SaveChanges();
                 return RedirectToAction("Index");
             }
-            ModelState.Clear();
-            return View(user);
+            else if (user.Password != user.ConfirmPassword)
+            {
+                ViewBag.MassageWrong = "The Password and Confirm Password do not match. ;(";
+                return View(user);
+            }
+            else if (db.User.Where(b => b.Email == user.Email).Count() > 0)
+            {
+                ViewBag.MassageWrong = "This Email already. ;)";
+                return View(user);
+            }
+            else
+            {
+                return View(user);
+            }
         }
         protected override void Dispose(bool disposing)
         {

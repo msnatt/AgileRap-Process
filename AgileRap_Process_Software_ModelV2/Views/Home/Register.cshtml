@@ -2,60 +2,70 @@
 
 @{
     ViewData["Title"] = "Home Page";
+    var Text = ViewBag.MassageWrong;
 }
-<h1>Register</h1>
-<br />
-<br />
 
 @using (Html.BeginForm("Register", "Home", FormMethod.Post, new { @class = "form-horizontal" }))
 {
-    @Html.HiddenFor(m=>m.ID)
-    @Html.HiddenFor(m=>m.LineID)
-    @Html.HiddenFor(m=>m.CreateDate)
-    @Html.HiddenFor(m=>m.UpdateDate)
-    @Html.HiddenFor(m=>m.CreateBy)
-    @Html.HiddenFor(m=>m.UpdateBy)
-    @Html.HiddenFor(m=>m.IsDelete)
-    @Html.HiddenFor(m=>m.Role)
+    @Html.HiddenFor(m => m.ID)
+    @Html.HiddenFor(m => m.LineID)
+    @Html.HiddenFor(m => m.CreateDate)
+    @Html.HiddenFor(m => m.UpdateDate)
+    @Html.HiddenFor(m => m.CreateBy)
+    @Html.HiddenFor(m => m.UpdateBy)
+    @Html.HiddenFor(m => m.IsDelete)
+    @Html.HiddenFor(m => m.Role)
 
-    <div class="row">
-        <div class="offset-md-2 col-md-1 text-end">
-            @Html.LabelFor(m => m.Email)
+
+    <div class="offset-md-1">
+        <h1>Register</h1>
+        <br />
+        <br />
+        <div class="row">
+            <div class="col-md-2 text-end">
+                @Html.LabelFor(m => m.Email)
+            </div>
+            <div class="col-md-3">
+                @Html.EditorFor(m => m.Email, new { HtmlAttributes = new { @class = "form-control" } })
+                @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-danger" })
+            </div>
         </div>
-        <div class="col-md-2">
-            @Html.EditorFor(m => m.Email, new { HtmlAttributes = new { @class = "form-control" } })
+        <div class="row">
+            <div class="col-md-2 text-end">
+                @Html.LabelFor(m => m.Password)
+            </div>
+            <div class="col-md-3">
+                @Html.EditorFor(m => m.Password, new { HtmlAttributes = new { @class = "form-control" } })
+                @Html.ValidationMessageFor(m => m.Password, "", new { @class = "text-danger" })
+            </div>
         </div>
-    </div>
-    <div class="row">
-        <div class="offset-md-2 col-md-1 text-end">
-            @Html.LabelFor(m => m.Password)
+        <div class="row">
+            <div class="col-md-2 text-end">
+                @Html.LabelFor(m => m.ConfirmPassword)
+            </div>
+            <div class="col-md-3">
+                @Html.EditorFor(m => m.ConfirmPassword, new { HtmlAttributes = new { @class = "form-control" } })
+                @Html.ValidationMessageFor(m => m.ConfirmPassword, "", new { @class = "text-danger" })
+            </div>
         </div>
-        <div class="col-md-2">
-            @Html.EditorFor(m => m.Password, new { HtmlAttributes = new { @class = "form-control" } })
+        <div class="row">
+            <div class="col-md-2 text-end">
+                @Html.LabelFor(m => m.Name)
+            </div>
+            <div class="col-md-3">
+                @Html.EditorFor(m => m.Name, new { HtmlAttributes = new { @class = "form-control" } })
+                @Html.ValidationMessageFor(m => m.Name, "", new { @class = "text-danger" })
+            </div>
         </div>
-    </div>
-    <div class="row">
-        <div class="offset-md-2 col-md-1 text-end">
-            @Html.LabelFor(m => m.ConfirmPassword)
-        </div>
-        <div class="col-md-2">
-            @Html.EditorFor(m => m.ConfirmPassword, new { HtmlAttributes = new { @class = "form-control" } })
-        </div>
-    </div>
-    <div class="row">
-        <div class="offset-md-2 col-md-1 text-end">
-            @Html.DisplayNameFor(m => m.Name)
-        </div>
-        <div class="col-md-2">
-            @Html.EditorFor(m => m.Name, new { HtmlAttributes = new { @class = "form-control" } })
-        </div>
-    </div>
-    <br />
-    <div class="row">
-        <div class="col-md-4 text-end">
-        </div>
-        <div class="col-md-1 text-end">
-            <input value="Register" type="submit" class="btn-outline-secondary text-black" />
+        <br />
+        <h6 class="row offset-md-1 col-md-8 text-danger">
+            @Text
+        </h6>
+        <br />
+        <div class="row">
+            <div class="offset-md-3 col-md-2 text-end">
+                <input value="Login" type="submit" class="btn-outline-secondary text-black" />
+            </div>
         </div>
     </div>
 }

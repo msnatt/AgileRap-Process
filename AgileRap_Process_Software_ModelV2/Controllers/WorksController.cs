@@ -28,11 +28,13 @@ namespace AgileRap_Process_Software_ModelV2.Controllers
             return View(Works);
         }
 
+
         public ActionResult Create()
         {
             var Works = GetWork();
+
             Work work = new Work();
-          
+
             work.Insert(db);
             work.CreateBy = (int)HttpContext.Session.GetInt32("UserID");
             Works.Add(work);
@@ -50,6 +52,7 @@ namespace AgileRap_Process_Software_ModelV2.Controllers
                 {
                     Provider provider = new Provider();
 
+                    // MarkTodo การสร้าง  crud ไปอยู่ที้ model
                     provider.User = item;
                     provider.UserID = item.ID;
                     provider.IsDelete = false;
@@ -216,125 +219,171 @@ namespace AgileRap_Process_Software_ModelV2.Controllers
                 workLog.No = rawWorkLog.No + 1;
             }
             db.WorkLog.Add(workLog);
+
             List<string> strings = new List<string>();
-            if (work.IsSelectAll)
+            strings = work.ProviderIDs.Split(',').ToList();
+
+            foreach (string s in strings)
             {
-                var c = 0;
-                work.ProviderIDs = db.User.First().ID.ToString();
-                foreach (var item in db.User.ToList())
+                bool isvalid = false;
+                foreach (var item in work.Provider)
                 {
-                    if (c != 0)
+                    if (s == item.UserID.ToString())
                     {
-                        work.ProviderIDs = work.ProviderIDs + ',' + item.ID.ToString();
+                        isvalid = true;
                     }
-                    c++;
-                }
-
-            }
-            else
-            {
-                if (work.ProviderIDs != null || work.ProviderIDs == "")
-                {
-                    strings = work.ProviderIDs.Split(',').ToList();
-                }
-                else
-                {
-                    foreach (var itemPro in work.Provider)
+                    if (!strings.Contains(item.ID.ToString()))
                     {
-                        db.Provider.Remove(itemPro);
-                    }
-                    work.Provider = new List<Provider>();
-                }
-            }
-
-            List<Provider> providers = new List<Provider>();
-            foreach (Provider i in work.Provider)
-            {
-                providers.Add(i);
-            }
-
-
-            foreach (var item in strings)
-            {
-                ProviderLog providerLog = new ProviderLog();
-                providerLog.CreateDate = DateTime.Now;
-                providerLog.UpdateDate = DateTime.Now;
-                providerLog.User = db.User.Find(int.Parse(item));
-                providerLog.UserID = int.Parse(item);
-                providerLog.IsDelete = false;
-                providerLog.WorkLog = workLog;
-                providerLog.WorkLogID = work.ID;
-                providerLog.CreateBy = work.CreateBy;
-                providerLog.UpdateBy = work.UpdateBy;
-                db.ProviderLog.Add(providerLog);
-
-                if (work.Provider.Count > 0)
-                {
-                    foreach (var item2 in providers)
-                    {
-                        if (item == item2.UserID.ToString())
-                        {
-                            db.Entry(item2).State = EntityState.Modified;
-                        }
-                        else
-                        {
-                            var itHaveValue = false;
-                            foreach (var item3 in strings)
-                            {
-                                if (item2.UserID.ToString() == item3)
-                                {
-                                    itHaveValue = true;
-                                }
-                            }
-                            if (!itHaveValue)
-                            {
-                                db.Provider.Remove(item2);
-                            }
-
-                            var itHasValue2 = false;
-                            foreach (var item4 in providers)
-                            {
-                                if (item == item4.UserID.ToString())
-                                {
-                                    itHasValue2 = true;
-                                }
-                            }
-                            if (!itHasValue2)
-                            {
-                                Provider provider = new Provider();
-                                provider.CreateDate = DateTime.Now;
-                                provider.UpdateDate = DateTime.Now;
-                                provider.User = db.User.Find(int.Parse(item));
-                                provider.UserID = db.User.Find(int.Parse(item)).ID;
-                                provider.IsDelete = false;
-                                provider.Work = work;
-                                provider.WorkID = work.ID;
-                                provider.CreateBy = work.CreateBy;
-                                provider.UpdateBy = work.UpdateBy;
-                                db.Provider.Add(provider);
-
-                            }
-                        }
+                        db.Provider.Remove(item);
                     }
                 }
-                else
+                if (!isvalid)
                 {
-                    foreach (var idprovider in strings)
-                    {
-                        Provider provider = new Provider();
-                        provider.CreateDate = DateTime.Now;
-                        provider.UpdateDate = DateTime.Now;
-                        provider.User = db.User.Find(int.Parse(idprovider));
-                        provider.UserID = int.Parse(idprovider);
-                        provider.IsDelete = false;
-                        provider.Work = work;
-                        provider.WorkID = work.ID;
-                        provider.CreateBy = work.CreateBy;
-                        provider.UpdateBy = work.UpdateBy;
-                        db.Provider.Add(provider);
-                    }
+                    Provider provider = new Provider();
+                    provider.CreateDate = DateTime.Now;
+                    provider.UpdateDate = DateTime.Now;
+                    provider.User = db.User.Find(int.Parse(s));
+                    provider.UserID = int.Parse(s);
+                    provider.IsDelete = false;
+                    provider.Work = work;
+                    provider.WorkID = work.ID;
+                    provider.CreateBy = HttpContext.Session.GetInt32("UserID");
+                    provider.UpdateBy = HttpContext.Session.GetInt32("UserID");
+                    db.Provider.Add(provider);
+
+                    ProviderLog providerLog = new ProviderLog();
+                    providerLog.CreateDate = DateTime.Now;
+                    providerLog.UpdateDate = DateTime.Now;
+                    providerLog.User = db.User.Find(int.Parse(s));
+                    providerLog.UserID = int.Parse(s);
+                    providerLog.IsDelete = false;
+                    providerLog.WorkLog = workLog;
+                    providerLog.WorkLogID = workLog.ID;
+                    providerLog.CreateBy = HttpContext.Session.GetInt32("UserID");
+                    providerLog.UpdateBy = HttpContext.Session.GetInt32("UserID");
+                    db.ProviderLog.Add(providerLog);
                 }
             }
+
+
+            //if (work.IsSelectAll)
+            //{
+            //    var c = 0;
+            //    work.ProviderIDs = db.User.First().ID.ToString();
+            //    foreach (var item in db.User.ToList())
+            //    {
+            //        if (c != 0)
+            //        {
+            //            work.ProviderIDs = work.ProviderIDs + ',' + item.ID.ToString();
+            //        }
+            //        c++;
+            //    }
+
+            //}
+            //else
+            //{
+            //    if (work.ProviderIDs != null || work.ProviderIDs == "")
+            //    {
+            //        strings = work.ProviderIDs.Split(',').ToList();
+            //    }
+            //    else
+            //    {
+            //        foreach (var itemPro in work.Provider)
+            //        {
+            //            db.Provider.Remove(itemPro);
+            //        }
+            //        work.Provider = new List<Provider>();
+            //    }
+            //}
+
+            //List<Provider> providers = new List<Provider>();
+            //foreach (Provider i in work.Provider)
+            //{
+            //    providers.Add(i);
+            //}
+
+
+            //foreach (var item in strings)
+            //{
+            //    ProviderLog providerLog = new ProviderLog();
+            //    providerLog.CreateDate = DateTime.Now;
+            //    providerLog.UpdateDate = DateTime.Now;
+            //    providerLog.User = db.User.Find(int.Parse(item));
+            //    providerLog.UserID = int.Parse(item);
+            //    providerLog.IsDelete = false;
+            //    providerLog.WorkLog = workLog;
+            //    providerLog.WorkLogID = work.ID;
+            //    providerLog.CreateBy = work.CreateBy;
+            //    providerLog.UpdateBy = work.UpdateBy;
+            //    db.ProviderLog.Add(providerLog);
+
+            //    if (work.Provider.Count > 0)
+            //    {
+            //        foreach (var item2 in providers)
+            //        {
+            //            if (item == item2.UserID.ToString())
+            //            {
+            //                db.Entry(item2).State = EntityState.Modified;
+            //            }
+            //            else
+            //            {
+            //                var itHaveValue = false;
+            //                foreach (var item3 in strings)
+            //                {
+            //                    if (item2.UserID.ToString() == item3)
+            //                    {
+            //                        itHaveValue = true;
+            //                    }
+            //                }
+            //                if (!itHaveValue)
+            //                {
+            //                    db.Provider.Remove(item2);
+            //                }
+
+            //                var itHasValue2 = false;
+            //                foreach (var item4 in providers)
+            //                {
+            //                    if (item == item4.UserID.ToString())
+            //                    {
+            //                        itHasValue2 = true;
+            //                    }
+            //                }
+            //                if (!itHasValue2)
+            //                {
+            //                    Provider provider = new Provider();
+            //                    provider.CreateDate = DateTime.Now;
+            //                    provider.UpdateDate = DateTime.Now;
+            //                    provider.User = db.User.Find(int.Parse(item));
+            //                    provider.UserID = db.User.Find(int.Parse(item)).ID;
+            //                    provider.IsDelete = false;
+            //                    provider.Work = work;
+            //                    provider.WorkID = work.ID;
+            //                    provider.CreateBy = work.CreateBy;
+            //                    provider.UpdateBy = work.UpdateBy;
+            //                    db.Provider.Add(provider);
+
+            //                }
+            //            }
+            //        }
+            //    }
+            //    else
+            //    {
+            //        foreach (var idprovider in strings)
+            //        {
+            //            Provider provider = new Provider();
+            //            provider.CreateDate = DateTime.Now;
+            //            provider.UpdateDate = DateTime.Now;
+            //            provider.User = db.User.Find(int.Parse(idprovider));
+            //            provider.UserID = int.Parse(idprovider);
+            //            provider.IsDelete = false;
+            //            provider.Work = work;
+            //            provider.WorkID = work.ID;
+            //            provider.CreateBy = work.CreateBy;
+            //            provider.UpdateBy = work.UpdateBy;
+            //            db.Provider.Add(provider);
+            //        }
+            //    }
+            //}
 
             db.SaveChanges();
             return RedirectToAction("Index");
@@ -360,74 +409,12 @@ namespace AgileRap_Process_Software_ModelV2.Controllers
                             if (wLog[i].CreateDate != wLog[i + 1].CreateDate) { wLog[i].Description += "Created Date : " + wLog[i].CreateDate + " > " + wLog[i + 1].CreateDate + "\n"; }
                             if (wLog[i].StatusID != wLog[i + 1].StatusID) { wLog[i].Description += "Status : " + wLog[i].Status.StatusName + " > " + wLog[i + 1].Status.StatusName + "\n"; }
                             if (wLog[i].Remark != wLog[i + 1].Remark) { wLog[i].Description += "Remark : " + wLog[i].Remark + " > " + wLog[i + 1].Remark + "\n"; }
-
-                            //หาค่าที่ไม่เท่ากันของ provider โดยเทียบจาก WorkLog[i] และ WorkLog[i+1]
-                            if (wLog[i].ProviderLog != wLog[i + 1].ProviderLog)
-                            {
-                                List<string> stringlist = new List<string>();
-
-                                //เช็ค provider ทั้ง 2 ตั้วว่าเท่ากันหรือไม่
-                                if (wLog[i].ProviderLog.Count == wLog[i + 1].ProviderLog.Count)
-                                {
-                                    for (int j = 0; j < wLog[i].ProviderLog.Count; j++)
-                                    {
-                                        if (wLog[i].ProviderLog.ElementAt(j).UserID != wLog[i + 1].ProviderLog.ElementAt(j).UserID)
-                                        {
-                                            stringlist.Add($"{wLog[i].ProviderLog.ElementAt(j).User.Name} > {wLog[i + 1].ProviderLog.ElementAt(j).User.Name}\n");
-                                        }
-                                    }
-                                }
-                                else
-                                {
-                                    foreach (var itemProLog in wLog[i].ProviderLog)
-                                    {
-                                        foreach (var itemProLog2 in wLog[i + 1].ProviderLog)
-                                        {
-                                            if (itemProLog.UserID != itemProLog2.UserID)
-                                            {
-                                                stringlist.Add($"{itemProLog.User.Name} > {itemProLog2.User.Name}\n");
-                                            }
-                                        }
-                                    }
-                                }
-                                stringlist.Distinct();
-                                var TextUserName = "";
-                                foreach (var item in stringlist) { TextUserName += item; }
-                                if (TextUserName != "")
-                                {
-                                    wLog[i].Description += "Provider : " + TextUserName;
-                                }
-                            }
+                            if (wLog[i].ProviderList != wLog[i + 1].ProviderList) { wLog[i].Description += "Provider : " + wLog[i].ProviderList + " > " + wLog[i + 1].ProviderList + "\n"; }
                             work.WorkLog.Add(wLog[i]);
                         }
                     }
                     else
                     {
-                        for (int i = 0; i < wLog.Count(); i++)
-                        {
-                            wLog[i].Description = "";
-                            //if (wLog[i].Project != work.Project) { wLog[i].Description += "Project : " + wLog[i].Project + " > " + work.Project + "\n"; }
-                            //if (wLog[i].Name != work.Name) { wLog[i].Description += "Name : " + wLog[i].Name + " > " + work.Name + "\n"; }
-                            //if (wLog[i].CreateBy != work.CreateBy) { wLog[i].Description += "Assign By : " + wLog[i].CreateBy + " > " + work.CreateBy + "\n"; }
-                            //if (wLog[i].CreateDate != work.CreateDate) { wLog[i].Description += "Created Date : " + wLog[i].CreateDate + " > " + work.CreateDate + "\n"; }
-                            //if (wLog[i].StatusID != work.StatusID) { wLog[i].Description += "Status : " + wLog[i].Status.StatusName + " > " + work.Status.StatusName + "\n"; }
-                            //if (wLog[i].Remark != work.Remark) { wLog[i].Description += "Remark : " + wLog[i].Remark + " > " + work.Remark + "\n"; }
-                            //if (wLog[i].ProviderLog != work.Provider)
-                            //{
-                            //    foreach (var itemProLog in wLog[i].ProviderLog)
-                            //    {
-                            //        foreach (var itemProLog2 in wLog[i + 1].ProviderLog)
-                            //        {
-                            //            if (itemProLog.Id != itemProLog2.Id)
-                            //            {
-                            //                wLog[i].Description += "Provider : " + itemProLog.User.Name + " > " + itemProLog2.User.Name + "\n";
-                            //            }
-                            //        }
-                            //    }
-                            //}
-
-                            work.WorkLog.Add(wLog[i]);
-                        }
                     }
                 }
 
@@ -462,7 +449,34 @@ namespace AgileRap_Process_Software_ModelV2.Controllers
                     }
                 }
             }
+            ConvertProviderToAssignText(Works);
             return Works;
+        }
+        private void ConvertProviderToAssignText(List<Work> works)
+        {
+            foreach (var item in works)
+            {
+                for (int i = 0; i < item.Provider.Count; i++)
+                {
+                    if (i == 0) { item.ProviderList = item.Provider.First().User.Name; }
+                    else
+                    {
+                        item.ProviderList += ", " + item.Provider.ElementAt(i).User.Name;
+                    }
+
+                }
+                foreach (var item2 in item.WorkLog)
+                {
+                    for (int j = 0; j < item2.ProviderLog.Count; j++)
+                    {
+                        if (j == 0) { item2.ProviderList = item2.ProviderLog.First().User.Name; }
+                        else
+                        {
+                            item2.ProviderList += ", " + item2.ProviderLog.ElementAt(j).User.Name;
+                        }
+                    }
+                }
+            }
         }
     }
 }
