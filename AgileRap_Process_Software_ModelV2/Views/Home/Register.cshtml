@@ -18,11 +18,12 @@
 
 
     <div class="offset-md-1">
-        <h1>Register</h1>
+        <h1 class =" offset-md-1">Register</h1>
         <br />
         <br />
         <div class="row">
             <div class="col-md-2 text-end">
+                <span class="text-danger">*</span>
                 @Html.LabelFor(m => m.Email)
             </div>
             <div class="col-md-3">
@@ -32,6 +33,7 @@
         </div>
         <div class="row">
             <div class="col-md-2 text-end">
+                <span class="text-danger">*</span>
                 @Html.LabelFor(m => m.Password)
             </div>
             <div class="col-md-3">
@@ -41,6 +43,7 @@
         </div>
         <div class="row">
             <div class="col-md-2 text-end">
+                <span class="text-danger">*</span>
                 @Html.LabelFor(m => m.ConfirmPassword)
             </div>
             <div class="col-md-3">
@@ -50,6 +53,7 @@
         </div>
         <div class="row">
             <div class="col-md-2 text-end">
+                <span class="text-danger">*</span>
                 @Html.LabelFor(m => m.Name)
             </div>
             <div class="col-md-3">
@@ -64,7 +68,7 @@
         <br />
         <div class="row">
             <div class="offset-md-3 col-md-2 text-end">
-                <input value="Login" type="submit" class="btn-outline-secondary text-black" />
+                <input value="Register" type="submit" class="btn-outline-secondary text-black" />
             </div>
         </div>
     </div>

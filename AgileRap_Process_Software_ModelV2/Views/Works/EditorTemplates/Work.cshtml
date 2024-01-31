@@ -11,15 +11,15 @@
 @Html.HiddenFor(m => m.UpdateBy)
 @Html.HiddenFor(m => m.IsDelete)
 @Html.HiddenFor(m => m.ProviderIDs)
+@Html.HiddenFor(m => m.ProviderList)
 @Html.HiddenFor(m => m.IsSelectAll)
-@Html.HiddenFor(m => m.UserLoginID)
 @Html.Hidden("UserID", Luser.First().ID)
 
 
 
 <tr>
     <td>
-        @Html.DisplayFor(m => m.CreateDateText, new { htmlAttributes = new { @class = "form-control" } })
+        @Html.DisplayFor(m => m.CreateDate, new { htmlAttributes = new { @class = "form-control" } })
     </td>
     <td>
         @Html.EditorFor(m => m.Project, new { htmlAttributes = new { @class = "form-control" } })

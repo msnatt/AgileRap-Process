@@ -7,6 +7,11 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using AgileRap_Process_Software_ModelV2.Data;
 using AgileRap_Process_Software_ModelV2.Models;
+using System.Net.Mail;
+using MailKit.Net.Smtp;
+using MimeKit;
+using AgileRap_Process_Software_ModelV2.Common;
+using Microsoft.Extensions.Options;
 
 namespace AgileRap_Process_Software_ModelV2.Controllers
 {
@@ -24,43 +29,33 @@ namespace AgileRap_Process_Software_ModelV2.Controllers
         public ActionResult Index()
         {
             var Works = GetWork();
-            AllBag((int)HttpContext.Session.GetInt32("UserID"));
+            AllBag(GlobalVariable.GetUserLogin());
             return View(Works);
         }
-
-
         public ActionResult Create()
         {
+            //ดึงข้อมูล Work จาก Database
             var Works = GetWork();
 
             Work work = new Work();
+            work.Insert();
 
-            work.Insert(db);
-            work.CreateBy = (int)HttpContext.Session.GetInt32("UserID");
+            //เพิ่มข้อมูลที่พึ่งสร้างขึ้นมาเข้าไปที่ Work ที่ดึงมาจาก database
             Works.Add(work);
 
-
-            AllBag((int)HttpContext.Session.GetInt32("UserID"));
+            AllBag(GlobalVariable.GetUserLogin());
             return View(Works);
         }
         [HttpPost]
         public ActionResult Create(Work Work)
         {
+            //ตัวจัดการ dropdown multi checkbox
             if ((bool)Work.IsSelectAll)
             {
                 foreach (var item in db.User.ToList())
                 {
                     Provider provider = new Provider();
-
-                    // MarkTodo การสร้าง  crud ไปอยู่ที้ model
-                    provider.User = item;
-                    provider.UserID = item.ID;
-                    provider.IsDelete = false;
-                    provider.Work = Work;
-                    provider.WorkID = Work.ID;
-                    provider.CreateBy = Work.CreateBy;
-                    provider.UpdateBy = Work.UpdateBy;
-                    Work.Provider.Add(provider);
+                    provider.Insert(db, Work, item.ID);
                 }
             }
             else
@@ -68,74 +63,39 @@ namespace AgileRap_Process_Software_ModelV2.Controllers
                 foreach (var item in Work.ProviderIDs.Split(','))
                 {
                     Provider provider = new Provider();
-                    provider.CreateDate = DateTime.Now;
-                    provider.UpdateDate = DateTime.Now;
-                    provider.User = db.User.Find(int.Parse(item));
-                    provider.UserID = db.User.Find(int.Parse(item)).ID;
-                    provider.IsDelete = false;
-                    provider.Work = Work;
-                    provider.WorkID = Work.ID;
-                    provider.CreateBy = Work.CreateBy;
-                    provider.UpdateBy = Work.UpdateBy;
-                    Work.Provider.Add(provider);
+                    provider.Insert(db, Work, int.Parse(item));
                 }
             }
+            //*************************************************//
             db.Work.Add(Work);
-            db.SaveChanges();
+            //db.SaveChanges();
 
+            //บันทึก Work ปัจจุบันลง WorkLog
             WorkLog workLog = new WorkLog();
-            workLog.WorkID = Work.ID;
-            workLog.Work = Work;
-            workLog.CreateDate = Work.CreateDate;
-            workLog.UpdateDate = Work.UpdateDate;
-            workLog.CreateBy = Work.CreateBy;
-            workLog.UpdateBy = Work.UpdateBy;
-            workLog.Remark = Work.Remark;
-            workLog.DueDate = Work.DueDate;
-            workLog.Name = Work.Name;
-            workLog.Project = Work.Project;
-            workLog.StatusID = Work.StatusID;
-            workLog.Status = Work.Status;
-            WorkLog rawLog = new WorkLog();
-            try
-            {
-                rawLog = db.WorkLog.Where(b => b.WorkID == Work.ID).LastOrDefault();
-            }
-            catch
-            {
-                rawLog = null;
-            }
-            if (rawLog == null)
-            {
-                workLog.No = 1;
-            }
-            else
-            {
-                workLog.No = rawLog.No + 1;
-            }
-            db.WorkLog.Add(workLog);
-            db.SaveChanges();
-            foreach (var item in Work.Provider)
-            {
-                ProviderLog providerLog = new ProviderLog();
-                providerLog.WorkLog = workLog;
-                providerLog.WorkLogID = workLog.ID;
-                providerLog.CreateBy = workLog.CreateBy;
-                providerLog.UpdateBy = workLog.UpdateBy;
-                providerLog.CreateDate = workLog.CreateDate;
-                providerLog.UpdateDate = workLog.UpdateDate;
-                providerLog.UserID = item.UserID;
-                db.ProviderLog.Add(providerLog);
-                db.SaveChanges();
-            }
+            workLog.Insert(db, Work);
+            //db.SaveChanges();
 
+            //วนลูปเพื่อบันทึก provider
+            foreach (var ProviderItem in Work.Provider)
+            {
+                //บันทึก Provider ปัจจุบันลง ProviderLog
+                ProviderLog providerLog = new ProviderLog();
+                providerLog.Insert(db, workLog, ProviderItem.ID);
+                //db.SaveChanges();
+            }
+            //ส่งแจ้งเตือนผ่านเมล์
+            SentEmailToProvider(Work);
+            //กลับสู่หน้าหลัก
             return RedirectToAction("Index");
         }
         public ActionResult Edit(int id)
         {
+            //หาตัวที่ต้องการแก้ไขจาก id 
             var Works = GetWork();
-
             var work = Works.Where(b => b.ID == id).FirstOrDefault();
+            //************************************************//
+
+            //ทำ field ProviderIDs ให้มีค่าตาม Provider ที่ดึงมาจาก Database
             var c = 0;
             if (work.Provider.Count > 0)
             {
@@ -148,10 +108,11 @@ namespace AgileRap_Process_Software_ModelV2.Controllers
                     work.ProviderIDs = work.ProviderIDs + ',' + item.UserID.ToString();
                 }
                 c++;
-
             }
-            List<SelectListItem> list = new List<SelectListItem>();
+            //==================================================//
 
+            //ทำ SelectListItem ให้กับ Dropdown multi checkbox เพื่อให้มีค่าตรงกับ Provider ใน Database
+            List<SelectListItem> list = new List<SelectListItem>();
             foreach (var item in db.User)
             {
                 SelectListItem selectListItem = new SelectListItem();
@@ -170,59 +131,88 @@ namespace AgileRap_Process_Software_ModelV2.Controllers
                     }
                 }
                 list.Add(selectListItem);
-
             }
-            ViewBag.WorkID = id;
-            ViewBag.Model = Works;
-            AllBag((int)HttpContext.Session.GetInt32("UserID"));
-            ViewBag.UserBag = list;
+            //---------------------------------------------------//
 
+            ViewBag.Model = Works;
+            AllBag(GlobalVariable.GetUserLogin());
+            ViewBag.UserBag = list;
             return View(work);
         }
         [HttpPost]
         public ActionResult Edit(Work work)
         {
-            if (work.DueDate == null)
+            //เช็คว่ามีการเปลี่ยนแปลงค่าไหม  ไม่มีค่าที่เปลี่ยนแปลง ไม่ต้องบันทึก Log
+            var Works = GetWork();
+            var temp = Works.Where(b => b.ID == work.ID).ToList().First();
+            if (work.Project == temp.Project &&
+                work.Name == temp.Name &&
+                work.DueDate == temp.DueDate &&
+                work.StatusID == temp.StatusID &&
+                work.Remark == temp.Remark &&
+                work.IsSelectAll != true &&
+                work.ProviderIDs == temp.ProviderIDs &&
+                work.ProviderList == temp.ProviderList &&
+                work.Provider.Count == temp.Provider.Count)
             {
-                work.StatusID = 1;
+                bool IsNotEqual = false;
+                for (int i = 0; i < work.Provider.Count; i++)
+                {
+                    if (work.Provider.ElementAt(i).ID != temp.Provider.ElementAt(i).ID)
+                    {
+                        IsNotEqual = true;
+                    }
+                }
+                if (!IsNotEqual)
+                {
+                    return RedirectToAction("Index");
+                }
             }
-            work.UpdateDate = DateTime.Now;
-            db.Entry(work).State = EntityState.Modified;
+            //*************************************************//
+
+            db.ChangeTracker.Clear();
+            //UPDATE work
+            work.Update(db);
+
+            //นำ Work ปัจจุบันไปเก็บไว้เป็น Log
             WorkLog workLog = new WorkLog();
-            workLog.WorkID = work.ID;
-            workLog.Work = work;
-            workLog.CreateDate = work.CreateDate;
-            workLog.UpdateDate = work.UpdateDate;
-            workLog.CreateBy = work.CreateBy;
-            workLog.UpdateBy = work.UpdateBy;
-            workLog.Remark = work.Remark;
-            workLog.DueDate = work.DueDate;
-            workLog.Name = work.Name;
-            workLog.Project = work.Project;
-            workLog.StatusID = work.StatusID;
-            workLog.Status = work.Status;
-            WorkLog rawWorkLog = new WorkLog();
-            try
-            {
-                rawWorkLog = db.WorkLog.Where(b => b.WorkID == work.ID).ToList().Last();
-            }
-            catch
-            {
-                rawWorkLog = null;
-            }
-            if (rawWorkLog == null)
-            {
-                workLog.No = 1;
-            }
-            else
-            {
-                workLog.No = rawWorkLog.No + 1;
-            }
-            db.WorkLog.Add(workLog);
+            workLog.Insert(db, work);
 
+            //ProviderIDs ที่ join กันมาเป็น string มาแบ่งออกเก็บไว้ใน List strings
             List<string> strings = new List<string>();
-            strings = work.ProviderIDs.Split(',').ToList();
+            if (work.ProviderIDs != null) { strings = work.ProviderIDs.Split(',').ToList(); }
 
+
+            //กรณีไม่ได้เลือก provider เข้ามาเลย
+            if (strings.Count == 0 && work.IsSelectAll == false)
+            {
+                foreach (var item in work.Provider)
+                {
+                    db.Provider.Remove(item);
+                }
+            }
+            //กรณีเลือก provider ทั้งหมด
+            else if (work.IsSelectAll)
+            {
+                foreach (var item in work.Provider)
+                {
+                    db.Provider.Remove(item);
+                }
+                foreach (var item in db.User.ToList())
+                {
+                    Provider provider = new Provider();
+                    provider.Insert(db, work, item.ID);
+
+                    ProviderLog providerLog = new ProviderLog();
+                    providerLog.Insert(db, workLog, item.ID);
+                    db.SaveChanges();
+                }
+
+                // ทำ List strings ให้ว่าง
+                strings = new List<string>();
+            }
+
+            //กรณีเลือก providerมาบางส่วน
             foreach (string s in strings)
             {
                 bool isvalid = false;
@@ -232,7 +222,7 @@ namespace AgileRap_Process_Software_ModelV2.Controllers
                     {
                         isvalid = true;
                     }
-                    if (!strings.Contains(item.ID.ToString()))
+                    if (!strings.Contains(item.UserID.ToString()))
                     {
                         db.Provider.Remove(item);
                     }
@@ -240,164 +230,34 @@ namespace AgileRap_Process_Software_ModelV2.Controllers
                 if (!isvalid)
                 {
                     Provider provider = new Provider();
-                    provider.CreateDate = DateTime.Now;
-                    provider.UpdateDate = DateTime.Now;
-                    provider.User = db.User.Find(int.Parse(s));
-                    provider.UserID = int.Parse(s);
-                    provider.IsDelete = false;
-                    provider.Work = work;
-                    provider.WorkID = work.ID;
-                    provider.CreateBy = HttpContext.Session.GetInt32("UserID");
-                    provider.UpdateBy = HttpContext.Session.GetInt32("UserID");
-                    db.Provider.Add(provider);
+                    provider.Insert(db, work, int.Parse(s));
 
-                    ProviderLog providerLog = new ProviderLog();
-                    providerLog.CreateDate = DateTime.Now;
-                    providerLog.UpdateDate = DateTime.Now;
-                    providerLog.User = db.User.Find(int.Parse(s));
-                    providerLog.UserID = int.Parse(s);
-                    providerLog.IsDelete = false;
-                    providerLog.WorkLog = workLog;
-                    providerLog.WorkLogID = workLog.ID;
-                    providerLog.CreateBy = HttpContext.Session.GetInt32("UserID");
-                    providerLog.UpdateBy = HttpContext.Session.GetInt32("UserID");
-                    db.ProviderLog.Add(providerLog);
                 }
+                ProviderLog providerLog = new ProviderLog();
+                providerLog.Insert(db, workLog, int.Parse(s));
+                db.SaveChanges();
             }
-
-
-            //if (work.IsSelectAll)
-            //{
-            //    var c = 0;
-            //    work.ProviderIDs = db.User.First().ID.ToString();
-            //    foreach (var item in db.User.ToList())
-            //    {
-            //        if (c != 0)
-            //        {
-            //            work.ProviderIDs = work.ProviderIDs + ',' + item.ID.ToString();
-            //        }
-            //        c++;
-            //    }
-
-            //}
-            //else
-            //{
-            //    if (work.ProviderIDs != null || work.ProviderIDs == "")
-            //    {
-            //        strings = work.ProviderIDs.Split(',').ToList();
-            //    }
-            //    else
-            //    {
-            //        foreach (var itemPro in work.Provider)
-            //        {
-            //            db.Provider.Remove(itemPro);
-            //        }
-            //        work.Provider = new List<Provider>();
-            //    }
-            //}
-
-            //List<Provider> providers = new List<Provider>();
-            //foreach (Provider i in work.Provider)
-            //{
-            //    providers.Add(i);
-            //}
-
-
-            //foreach (var item in strings)
-            //{
-            //    ProviderLog providerLog = new ProviderLog();
-            //    providerLog.CreateDate = DateTime.Now;
-            //    providerLog.UpdateDate = DateTime.Now;
-            //    providerLog.User = db.User.Find(int.Parse(item));
-            //    providerLog.UserID = int.Parse(item);
-            //    providerLog.IsDelete = false;
-            //    providerLog.WorkLog = workLog;
-            //    providerLog.WorkLogID = work.ID;
-            //    providerLog.CreateBy = work.CreateBy;
-            //    providerLog.UpdateBy = work.UpdateBy;
-            //    db.ProviderLog.Add(providerLog);
-
-            //    if (work.Provider.Count > 0)
-            //    {
-            //        foreach (var item2 in providers)
-            //        {
-            //            if (item == item2.UserID.ToString())
-            //            {
-            //                db.Entry(item2).State = EntityState.Modified;
-            //            }
-            //            else
-            //            {
-            //                var itHaveValue = false;
-            //                foreach (var item3 in strings)
-            //                {
-            //                    if (item2.UserID.ToString() == item3)
-            //                    {
-            //                        itHaveValue = true;
-            //                    }
-            //                }
-            //                if (!itHaveValue)
-            //                {
-            //                    db.Provider.Remove(item2);
-            //                }
-
-            //                var itHasValue2 = false;
-            //                foreach (var item4 in providers)
-            //                {
-            //                    if (item == item4.UserID.ToString())
-            //                    {
-            //                        itHasValue2 = true;
-            //                    }
-            //                }
-            //                if (!itHasValue2)
-            //                {
-            //                    Provider provider = new Provider();
-            //                    provider.CreateDate = DateTime.Now;
-            //                    provider.UpdateDate = DateTime.Now;
-            //                    provider.User = db.User.Find(int.Parse(item));
-            //                    provider.UserID = db.User.Find(int.Parse(item)).ID;
-            //                    provider.IsDelete = false;
-            //                    provider.Work = work;
-            //                    provider.WorkID = work.ID;
-            //                    provider.CreateBy = work.CreateBy;
-            //                    provider.UpdateBy = work.UpdateBy;
-            //                    db.Provider.Add(provider);
-
-            //                }
-            //            }
-            //        }
-            //    }
-            //    else
-            //    {
-            //        foreach (var idprovider in strings)
-            //        {
-            //            Provider provider = new Provider();
-            //            provider.CreateDate = DateTime.Now;
-            //            provider.UpdateDate = DateTime.Now;
-            //            provider.User = db.User.Find(int.Parse(idprovider));
-            //            provider.UserID = int.Parse(idprovider);
-            //            provider.IsDelete = false;
-            //            provider.Work = work;
-            //            provider.WorkID = work.ID;
-            //            provider.CreateBy = work.CreateBy;
-            //            provider.UpdateBy = work.UpdateBy;
-            //            db.Provider.Add(provider);
-            //        }
-            //    }
-            //}
-
+            //บันทึกการเปลี่ยนแปลงลง Database
             db.SaveChanges();
+
+            //ส่งไปทำ Action Index ต่อไป
             return RedirectToAction("Index");
         }
         public ActionResult History(int id)
         {
             var Works = GetWork();
 
+            //วนหา ID ที่ ผู้ใช้งานต้องการดู History
             foreach (var work in Works)
             {
+                //เช็ค ID ที่ผู้ใช้งานต้องการดู History
                 if (work.ID == id)
                 {
+                    //เคลีย WorkLog แล้วดึงมาใหม่
                     work.WorkLog.Clear();
                     var wLog = db.WorkLog.Where(b => b.WorkID == id).Include(m => m.Status).ToList();
+
+                    //เทียบระหว่าง Log 2 ตัว และนำตัวที่ต่างกันเขียนลงใน Description
                     if (wLog.Count > 1)
                     {
                         for (int i = 0; i < wLog.Count() - 1; i++)
@@ -409,23 +269,20 @@ namespace AgileRap_Process_Software_ModelV2.Controllers
                             if (wLog[i].CreateDate != wLog[i + 1].CreateDate) { wLog[i].Description += "Created Date : " + wLog[i].CreateDate + " > " + wLog[i + 1].CreateDate + "\n"; }
                             if (wLog[i].StatusID != wLog[i + 1].StatusID) { wLog[i].Description += "Status : " + wLog[i].Status.StatusName + " > " + wLog[i + 1].Status.StatusName + "\n"; }
                             if (wLog[i].Remark != wLog[i + 1].Remark) { wLog[i].Description += "Remark : " + wLog[i].Remark + " > " + wLog[i + 1].Remark + "\n"; }
-                            if (wLog[i].ProviderList != wLog[i + 1].ProviderList) { wLog[i].Description += "Provider : " + wLog[i].ProviderList + " > " + wLog[i + 1].ProviderList + "\n"; }
+                            if (wLog[i].ProviderLogList != wLog[i + 1].ProviderLogList) { wLog[i].Description += "Provider : " + wLog[i].ProviderLogList + " > " + wLog[i + 1].ProviderLogList + "\n"; }
                             work.WorkLog.Add(wLog[i]);
                         }
                     }
-                    else
-                    {
-                    }
                 }
-
             }
 
             ViewBag.IDBag = id;
-            AllBag((int)HttpContext.Session.GetInt32("UserID"));
+            AllBag(GlobalVariable.GetUserLogin());
             return View(Works);
         }
         public List<Work> GetWork()
         {
+            //ดึงข้อมูลมาจาก Database ทั้งหมดที่เชื่อมโยงกับ Work
             var Works = db.Work.Include(m => m.Status).Include(b => b.Provider).Include(h => h.WorkLog).ToList();
             foreach (var item in Works)
             {
@@ -445,38 +302,90 @@ namespace AgileRap_Process_Software_ModelV2.Controllers
                         {
                             item5.User = db.User.Find(item5.UserID);
                         }
-
                     }
                 }
             }
+            //นำ IDและName ของ Provider ที่ดึงมาจาก Database ไปเปลี่ยนเป็น Text เก็บไว้ที่ ProviderList และ ProviderIDs
             ConvertProviderToAssignText(Works);
             return Works;
         }
+        [HttpPost]
+        public ActionResult UpdateStatus(Work work)
+        {
+            var Works = GetWork();
+            if (work.DueDate == null) { work.StatusID = 1; } else { work.StatusID = 2; }
+            AllBag(GlobalVariable.GetUserLogin());
+            Works.Add(work);
+            ModelState.Clear();
+            return View("Create", Works);
+        }
         private void ConvertProviderToAssignText(List<Work> works)
         {
+            //ทำของ Work
             foreach (var item in works)
             {
                 for (int i = 0; i < item.Provider.Count; i++)
                 {
-                    if (i == 0) { item.ProviderList = item.Provider.First().User.Name; }
+                    if (i == 0)
+                    {
+                        item.ProviderList = item.Provider.First().User.Name;
+                        item.ProviderIDs = item.Provider.First().User.ID.ToString();
+                    }
                     else
                     {
                         item.ProviderList += ", " + item.Provider.ElementAt(i).User.Name;
+                        item.ProviderIDs += ", " + item.Provider.ElementAt(i).User.ID;
                     }
 
                 }
+                //ทำของ WorkLog
                 foreach (var item2 in item.WorkLog)
                 {
                     for (int j = 0; j < item2.ProviderLog.Count; j++)
                     {
-                        if (j == 0) { item2.ProviderList = item2.ProviderLog.First().User.Name; }
+                        if (j == 0) { item2.ProviderLogList = item2.ProviderLog.First().User.Name; }
                         else
                         {
-                            item2.ProviderList += ", " + item2.ProviderLog.ElementAt(j).User.Name;
+                            item2.ProviderLogList += ", " + item2.ProviderLog.ElementAt(j).User.Name;
                         }
                     }
                 }
             }
         }
+        private void SentEmailToProvider(Work work)
+        {
+            //Send Email
+            //เก็บ Email ผู้รับไว้ใน EmailList
+            work.Status = db.Status.Find(work.StatusID);
+            List<string> EmailList = new List<string>();
+            foreach (var item in work.Provider)
+            {
+                EmailList.Add(item.User.Email);
+            }
+
+            //ดึงเมล์คนส่งจาก appsetting.json
+            EmailSender _emailSender = new EmailSender(HttpContext.RequestServices.GetService<EmailConfiguration>());
+
+            //กำหนดข้อความที่จะส่งไปในเมล์
+            string contentText = $"" +
+                $"<h1>Hello</h1>" +
+                $"<h2>Subject {work.Project}</h2> " +
+                $"<h3>Name {work.Name}</h3>" +
+                $"<p>Form {HttpContext.RequestServices.GetService<EmailConfiguration>().From}</p>" +
+                $"<p>Status : {work.Status.StatusName}</p>" +
+                $"<p>Due Date : {work.DueDate}</p>" +
+                $"<p>Remark : {work.Remark}</p>" +
+                $"" +
+                $"<p>Assign by {db.User.Where(b => b.ID == GlobalVariable.GetUserLogin()).First().Name}</p>" +
+                $"";
+
+            //รวมข้อมูลที่เตรียมไว้ข้างต้น
+            Message message = new Message(EmailList, work.Project, contentText);
+
+            //ทำการส่ง Email ไปตามใน EmailList
+            _emailSender.SendEmail(message);
+        }
+
+
     }
 }

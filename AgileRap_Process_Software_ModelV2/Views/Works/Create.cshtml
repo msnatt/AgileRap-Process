@@ -3,6 +3,7 @@
 @{
     ViewData["Title"] = "Create";
     Microsoft.EntityFrameworkCore.Query.Internal.EntityQueryable<SelectListItem> UserBag = ViewBag.UserBag;
+    Microsoft.EntityFrameworkCore.Query.Internal.EntityQueryable<SelectListItem> StatusBag = ViewBag.StatusBag;
     Microsoft.EntityFrameworkCore.Query.Internal.EntityQueryable<User> Luser = ViewBag.UserLogin;
 }
 
@@ -54,7 +55,7 @@
         {
             <tr>
                 <td width="100px" class="text-center">
-                    @Html.DisplayFor(modelItem => item.CreateDateText)
+                    @Html.DisplayFor(modelItem => item.CreateDate)
                 </td>
                 <td width="80px" class="text-center">
                     @Html.DisplayFor(modelItem => item.Project)
@@ -63,7 +64,7 @@
                     @Html.DisplayFor(modelItem => item.Name)
                 </td>
                 <td width="50px" class="text-center">
-                    @Html.DisplayFor(modelItem => item.DueDateText)
+                    @Html.DisplayFor(modelItem => item.DueDate)
                 </td>
                 <td class="text-center">
                     @Html.DisplayFor(modelItem => UserBag.Where(b =>b.Value == item.CreateBy.ToString()).First().Text)
@@ -83,7 +84,7 @@
                 </td>
             </tr>
         }
-        @using (Html.BeginForm("Create", "Works", FormMethod.Post, new { id = "manageform", name = "manageform", enctype = "multipart/form-data" }))
+        @using (Html.BeginForm("Create", "Works", FormMethod.Post, new { id = "CreateForm", name = "CreateForm", enctype = "multipart/form-data" }))
         {
             <tr>
                 @Html.HiddenFor(m => m.Last().ID)
@@ -91,13 +92,14 @@
                 @Html.HiddenFor(m => m.Last().CreateDate)
                 @Html.HiddenFor(m => m.Last().UpdateDate)
                 @Html.HiddenFor(m => m.Last().IsDelete)
+                @Html.HiddenFor(m => m.Last().StatusID)
                 @Html.HiddenFor(m => m.Last().ProviderIDs)
+                @Html.HiddenFor(m => m.Last().ProviderList)
                 @Html.HiddenFor(m => m.Last().IsSelectAll)
-                @Html.HiddenFor(m => m.Last().UserLoginID)
                 @Html.Hidden("UserID", Luser.First().ID)
 
                 <td class="text-center">
-                    @Html.DisplayFor(m => m.Last().CreateDateText)
+                    @Html.DisplayFor(m => m.Last().CreateDate)
                 </td>
                 <td>
                     @Html.EditorFor(m => m.Last().Project,new {htmlAttributes = new {@class = "form-control" }})
@@ -106,18 +108,20 @@
                     @Html.EditorFor(m => m.Last().Name ,new {htmlAttributes = new {@class = "form-control" }})
                 </td>  
                 <td>
-                    @Html.EditorFor(m => m.Last().DueDate ,new {htmlAttributes = new {@class = "form-control", @style = "width:150px" }})
+                    @Html.EditorFor(m => m.Last().DueDate ,new {htmlAttributes = new {@class = "form-control", @style = "width:150px", onchange = "FuncUpdateStatus()"}})
                 </td>
-                <td>
+                <td class="text-center">
                     @Html.DropDownListFor(m => m.Last().CreateBy,new SelectList(ViewBag.UserBag,"Value","Text",Model.Last().CreateBy),"Select",new {@class = "", @style = "width:100px", hidden="hidden"})
-                    @Html.DropDownList("createby",new SelectList(ViewBag.UserBag,"Value","Text",Model.Last().CreateBy),"Select",new {@class = "form-select", @style = "width:100px", disabled = "disabled"})
+                    @Html.DisplayFor(m => Luser.First().Name)
                 </td>
                 <td>
                     <select hidden id="select-tops-options" asp-items="@ViewBag.UserBag" multiple >
                     </select>
                 </td>
                 <td>
-                    @Html.DropDownListFor(m => m.Last().StatusID, new SelectList(ViewBag.StatusBag, "Value", "Text"), "Please Select", new { @class = "form-select" ,style="width : 150px;"})
+                    @* @Html.DropDownListFor(m => m.Last().StatusID, new SelectList(ViewBag.StatusBag, "Value", "Text", Model.Last().StatusID), "Please Select", new { @class = "form-select" ,style="width : 150px;"}) *@
+                    @Html.DisplayFor(m=>StatusBag.Where(b=>b.Value == Model.Last().StatusID.ToString()).First().Text)
+                    @* <p id="ShowStatus"></p> *@
                 </td>
                 <td>
                     @Html.EditorFor(m => m.Last().Remark ,new {htmlAttributes = new {@class = "form-control" }})
@@ -184,6 +188,43 @@
 
     });
 
+    // document.addEventListener("change", () => {
+    //     var statusE = document.getElementById("StatusID");
+    //     var DuedateE = document.getElementById("DueDate");
+
+
+    // }); 
+    
+    function FuncUpdateStatus() { 
+        console.log("FuncUpdateStatus");
+        $("#CreateForm").attr("action", '@Url.Action("UpdateStatus","Works")');
+        $("#CreateForm").submit();
+    }
+
+    // var DuedateE = document.getElementById("DueDate");
+    // var statusE = document.getElementById("StatusID");
+    // var ShowStatus = document.getElementById("ShowStatus");
+    // var ischange = false;
+
+    // document.addEventListener("DOMContentLoaded", () => {
+    //     console.log(ShowStatus);
+    //     ShowStatus.textContent = '@StatusBag.Where(n => n.Value == Model.Last().StatusID.ToString()).First().Text';
+    // });
+
+    // DuedateE.addEventListener("change", () => {
+    //     console.log(statusE);
+    //     console.log(DuedateE);
+    //     console.log(ischange);
+
+    //     if (!ischange) {
+    //         statusE.value = 2; 
+    //         ischange = true;
+    //     }
+    //     else {  
+    //         statusE.value = 1;
+    //         ischange = false;
+    //     }
+    // });
 
 
 </script>

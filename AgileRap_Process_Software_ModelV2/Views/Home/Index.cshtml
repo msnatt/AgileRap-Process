@@ -4,13 +4,12 @@
     ViewData["Title"] = "Home Page";
     var Text = ViewBag.MassageWrong;
 }
-<h1>Login</h1>
-<br />
-<br />
-
 @using (Html.BeginForm("Login", "Home", FormMethod.Post, new { @class = "form-horizontal" }))
 {
-    <div class="offset-md-1">
+    <div class="offset-md-2">
+        <h1>Login</h1>
+        <br />
+        <br />
         <div class="row">
             <div class="col-md-1 text-end">
                 @Html.LabelFor(m => m.Email)

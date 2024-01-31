@@ -54,11 +54,11 @@
     <tbody>
         @foreach (var item in ListWork)
         {
-            if (item.ID != ViewBag.WorkID)
+            if (item.ID != Model.ID)
             {
                 <tr>
                     <td>
-                        @Html.DisplayFor(modelItem => item.CreateDateText)
+                        @Html.DisplayFor(modelItem => item.CreateDate)
                     </td>
                     <td>
                         @Html.DisplayFor(modelItem => item.Project)
@@ -67,9 +67,9 @@
                         @Html.DisplayFor(modelItem => item.Name)
                     </td>
                     <td>
-                        @Html.DisplayFor(modelItem => item.DueDateText)
+                        @Html.DisplayFor(modelItem => item.DueDate)
                     </td>
-                    <td>
+                    <td class="text-center">
                         @Html.DisplayFor(modelItem => UserBag.Where(b => b.Value == item.CreateBy.ToString()).First().Text)
                     </td>
                     <td>
@@ -82,8 +82,6 @@
                         @Html.DisplayFor(modelItem => item.Remark)
                     </td>
                     <td>
-                        @* @Html.ActionLink("History", "History", "Works", new { id = item.ID }, "") | *@
-                        @* @Html.ActionLink("Edit", "Edit", "Works", new { id = item.ID }, "") *@
                     </td>
                 </tr>
             }
@@ -116,6 +114,8 @@
                 },
                 onDeselectAll: function (options) {
                     document.getElementById("Work_IsSelectAll").value = false;
+                    document.getElementById("Work_ProviderIDs").value = "";
+
                 },
                 //includeResetOption: true,
                 //selectAllName: 'select-all-name',

@@ -64,7 +64,7 @@
         {
             <tr>
                 <td>
-                    @Html.DisplayFor(modelItem => item.CreateDateText)
+                    @Html.DisplayFor(modelItem => item.CreateDate)
                 </td>
                 <td>
                     @Html.DisplayFor(modelItem => item.Project)
@@ -73,9 +73,9 @@
                     @Html.DisplayFor(modelItem => item.Name)
                 </td>
                 <td>
-                    @Html.DisplayFor(modelItem => item.DueDateText)
+                    @Html.DisplayFor(modelItem => item.DueDate)
                 </td>
-                <td>
+                <td class="text-center">
                     @Html.DisplayFor(modelItem => UserBag.Where(b => b.Value == item.CreateBy.ToString()).First().Text)
                 </td>
                 <td>
@@ -104,16 +104,20 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach (WorkLog itemWorkLog in Model.Where(b => b.ID == ViewBag.IDBag).First().WorkLog)
+                                @foreach (WorkLog itemWorkLog in Model.Where(b => b.ID == ViewBag.IDBag).First().WorkLog.Reverse())
                                 {
-                                    <tr>
-                                        <td width="10px">
-                                            @Html.DisplayFor(m => itemWorkLog.No)
-                                        </td>
-                                        <td>
-                                            @Html.DisplayFor(m => itemWorkLog.Description)
-                                        </td>
-                                    </tr>
+                                    if (itemWorkLog.Description != "")
+                                    {
+                                        <tr>
+                                            <td width="10px">
+                                                @Html.DisplayFor(m => itemWorkLog.No)
+                                            </td>
+                                            <td>
+                                                @Html.DisplayFor(m => itemWorkLog.Description)
+                                            </td>
+                                        </tr>
+
+                                    }
                                 }
                             </tbody>
                         </table>

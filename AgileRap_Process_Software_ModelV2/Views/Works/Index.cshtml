@@ -5,6 +5,16 @@
     Microsoft.EntityFrameworkCore.Query.Internal.EntityQueryable<SelectListItem> UserBag = ViewBag.UserBag;
     Microsoft.EntityFrameworkCore.Query.Internal.EntityQueryable<User> Luser = ViewBag.UserLogin;
 }
+<script>
+    function FuncOperator() {
+        console.log(document.getElementById("DivOperatorBtn"));
+
+    }
+    function FuncController() {
+
+    }
+</script>
+
 <div class="row">
     <div class="col-md-3">
         <h1>รายการงาน</h1>
@@ -17,6 +27,45 @@
 
 <br />
 <br />
+
+@*ทำตัวกรอง*@
+@using (Html.BeginForm("Index", "Works", FormMethod.Get, new { @class = "" }))
+{
+    <div class="row">
+        <div id="DivOperatorBtn" class="col-md-1 text-end" style="padding:1px;">
+            <input value="Operator" type="button" class="btn btn-outline-success" onclick="FuncOperator()" />
+        </div>
+        <div id="DivControllerBtn" class="col-md-1" style="padding:1px;">
+            <input value="Controller" type="button" class="btn btn-outline-danger" onclick="FuncController()" />
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-auto">
+            @Html.DisplayNameFor(b => b.First().CreateBy)
+        </div>
+        <div class="col-md-1">
+            @Html.DropDownList("AssignBy", new SelectList(UserBag, "Value", "Text", Context.Session.GetInt32("UserID")), "Select Requester", new { @class = "form-select" })
+        </div>
+        <div class="col-auto">
+            @Html.DisplayNameFor(b => b.First().ProviderList)
+        </div>
+        <div class="col-md-2">
+            @Html.DropDownList("AssignTo", new SelectList(UserBag, "Value", "Text"), "Select Provider", new { @class = "form-select" })
+        </div>
+        <div class="col-auto">
+            @Html.DisplayNameFor(b => b.First().Project)
+        </div>
+        <div class="col-md-2">
+            @Html.DropDownList("Project", new SelectList(UserBag, "Value", "Text"), "Select Project", new { @class = "form-select" })
+        </div>
+        <div class="col-auto">
+            @Html.DisplayNameFor(b => b.First().StatusID)
+        </div>
+        <div class="col-md-2">
+            @Html.DropDownList("Status", new SelectList(UserBag, "Value", "Text"), "Select Status", new { @class = "form-select" })
+        </div>
+    </div>
+}
 
 <table class="table table-borlesses">
     <thead>
@@ -55,7 +104,7 @@
         {
             <tr>
                 <td>
-                    @Html.DisplayFor(modelItem => item.CreateDateText)
+                    @Html.DisplayFor(modelItem => item.CreateDate)
                 </td>
                 <td>
                     @Html.DisplayFor(modelItem => item.Project)
@@ -64,9 +113,9 @@
                     @Html.DisplayFor(modelItem => item.Name)
                 </td>
                 <td>
-                    @Html.DisplayFor(modelItem => item.DueDateText)
+                    @Html.DisplayFor(modelItem => item.DueDate)
                 </td>
-                <td>
+                <td class="text-center">
                     @Html.DisplayFor(modelItem => UserBag.Where(b => b.Value == item.CreateBy.ToString()).First().Text)
                 </td>
                 <td>
@@ -86,7 +135,7 @@
         }
         <tr>
             <td class="text-center">
-                @Html.ActionLink("Create Task", "Create", "Works", new { UserID = Luser.First().ID}, new { @class = "btn btn-outline-primary" })
+                @Html.ActionLink("Create Task", "Create", "Works", new { UserID = Luser.First().ID }, new { @class = "btn btn-outline-primary" })
             </td>
             <td></td>
             <td></td>

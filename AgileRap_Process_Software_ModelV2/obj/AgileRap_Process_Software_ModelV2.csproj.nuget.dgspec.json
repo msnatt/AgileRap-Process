@@ -62,6 +62,10 @@
               "target": "Package",
               "version": "[8.0.0, )"
             },
+            "NETCore.MailKit": {
+              "target": "Package",
+              "version": "[2.1.0, )"
+            },
             "bootstrap": {
               "target": "Package",
               "version": "[5.3.2, )"
