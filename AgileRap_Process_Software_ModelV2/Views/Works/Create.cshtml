@@ -18,6 +18,52 @@
 </div>
 <br />
 <br />
+@using (Html.BeginForm("Create", "Works", FormMethod.Get, new {}))
+{
+    @Html.Hidden("IsSelect")
+    @Html.Hidden("AssignTo")
+    <div class="row">
+        <div id="DivOperatorBtn" class="col-md-1 text-end" style="padding:1px;">
+            <input id="OperatorBtn" value="Operator" type="button" class="btn btn-outline-success" onclick="FuncOperator()" />
+        </div>
+        <div id="DivControllerBtn" class="col-md-1" style="padding:1px;">
+            <input id="ControllerBtn" value="Controller" type="button" class="btn btn-outline-danger" onclick="FuncController()" />
+        </div>
+    </div>
+    <br />
+    <div class="row">
+        <div class="col-auto">
+            @Html.DisplayNameFor(b => b.First().CreateBy)
+        </div>
+        <div class="col-md-1">
+            @Html.DropDownList("AssignBy", new SelectList(UserBag, "Value", "Text",Context.Session.GetString("AssignBy")), "Select Requester", new { @class = "form-select" })
+        </div>
+        <div class="col-auto">
+            @Html.DisplayNameFor(b => b.First().ProviderList)
+        </div>
+        <div class="col-md-2">
+            @* @Html.DropDownList("AssignTo", new SelectList(UserBag, "Value", "Text"), "Select Provider", new { @class = "form-select" }) *@
+            <select hidden id="select-filter-options" asp-items="@ViewBag.UserFilterBag" multiple >
+            </select>
+
+        </div>
+        <div class="col-auto">
+            @Html.DisplayNameFor(b => b.First().Project)
+        </div>
+        <div class="col-md-2">
+            @Html.DropDownList("Project", new SelectList(UserBag, "Value", "Text",Context.Session.GetString("Project")), "Select Project", new { @class = "form-select" })
+        </div>
+        <div class="col-auto">
+            @Html.DisplayNameFor(b => b.First().StatusID)
+        </div>
+        <div class="col-md-2">
+            @Html.DropDownList("Status", new SelectList(UserBag, "Value", "Text",Context.Session.GetString("Status")), "Select Status", new { @class = "form-select" })
+        </div>
+        <div class="col-md-1">
+            <input value="Search" type="submit" class="btn btn-dark"  />
+        </div>
+    </div>
+}
 <table class="table table-borlesses">
     <thead>
         <tr>
@@ -79,8 +125,7 @@
                     @Html.DisplayFor(modelItem => item.Remark)
                 </td>
                 <td>
-                    @* @Html.ActionLink("History", "History", "Works", new { id = item.ID }, "") | *@
-                    @* @Html.ActionLink("Edit", "Edit", "Works", new { id = item.ID }, "") *@
+
                 </td>
             </tr>
         }
@@ -119,9 +164,7 @@
                     </select>
                 </td>
                 <td>
-                    @* @Html.DropDownListFor(m => m.Last().StatusID, new SelectList(ViewBag.StatusBag, "Value", "Text", Model.Last().StatusID), "Please Select", new { @class = "form-select" ,style="width : 150px;"}) *@
                     @Html.DisplayFor(m=>StatusBag.Where(b=>b.Value == Model.Last().StatusID.ToString()).First().Text)
-                    @* <p id="ShowStatus"></p> *@
                 </td>
                 <td>
                     @Html.EditorFor(m => m.Last().Remark ,new {htmlAttributes = new {@class = "form-control" }})
@@ -186,6 +229,55 @@
             }
         });
 
+        $('#select-filter-options').multiselect({
+            buttonClass: 'form-select',
+            nonSelectedText: 'Select Provider',
+            buttonContainer: '<div class="btn-success" id="select-tops-options-container"></div>',
+            selectedClass: 'active multiselect-selected',
+            numberDisplayed: 5,
+            buttonWidth: '10em',
+            includeSelectAllOption: true,
+            onSelectAll: function (options) {
+                document.getElementById("IsSelect").value = true;
+            },
+            onDeselectAll: function (options) {
+                document.getElementById("IsSelect").value = false;
+            },
+            //includeResetOption: true,
+            //selectAllName: 'select-all-name',
+            onChange: function (option, checked) {
+                /*
+                 * Not there yet
+                 */
+                document.getElementById("IsSelect").value = false;
+
+                if (checked) {
+                    document.querySelectorAll(`[value="${$(option[0])[0].value}"]`)[1].ariaChecked = "true";
+                    document.querySelectorAll(`[value="${$(option[0])[0].value}"]`)[0].ariaChecked = "true";
+                } else {
+                    document.querySelectorAll(`[value="${$(option[0])[0].value}"]`)[1].ariaChecked = "false";
+                    document.querySelectorAll(`[value="${$(option[0])[0].value}"]`)[0].ariaChecked = "false";
+                }
+                
+                //$("#select-tops-options").multiselect('deselect', '1');
+                var toppings = $('#select-filter-options option:selected');
+
+                var selected = [];
+                $(toppings).each(function (index, item) {
+                    selected.push([$(this).val()]);
+                });
+
+                document.getElementById("AssignTo").value = selected.join(',');
+            },
+            templates: {
+                button:
+                    '<button type="button" class="multiselect dropdown-toggle" ' +
+                    'data-bs-toggle="dropdown"><span class="multiselect-selected-text"></span></button>',
+                resetButton: '<div class="multiselect-reset text-center p-2"><button type="button" class="btn btn-sm btn-danger"></button></div>'
+            }
+        });
+
+
     });
 
     // document.addEventListener("change", () => {
@@ -225,6 +317,5 @@
     //         ischange = false;
     //     }
     // });
-
 
 </script>

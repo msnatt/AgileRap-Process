@@ -2,7 +2,7 @@
 {
     public static class GlobalVariable
     {
-        public static int UserID { get; set; }
+        private static int UserID;
         public static void SetUserLogin(int id)
         {
             UserID = id;

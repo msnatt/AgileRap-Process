@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("AgileRap_Process_Software_ModelV2")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b493039bfd0c3af3f14b4f6a8c700f83339d24b2")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+0098328245a1031f3fd06904708dcc37965a2e73")]
 [assembly: System.Reflection.AssemblyProductAttribute("AgileRap_Process_Software_ModelV2")]
 [assembly: System.Reflection.AssemblyTitleAttribute("AgileRap_Process_Software_ModelV2")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

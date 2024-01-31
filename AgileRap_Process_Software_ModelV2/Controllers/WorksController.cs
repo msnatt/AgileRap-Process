@@ -7,11 +7,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using AgileRap_Process_Software_ModelV2.Data;
 using AgileRap_Process_Software_ModelV2.Models;
-using System.Net.Mail;
-using MailKit.Net.Smtp;
-using MimeKit;
 using AgileRap_Process_Software_ModelV2.Common;
-using Microsoft.Extensions.Options;
 
 namespace AgileRap_Process_Software_ModelV2.Controllers
 {
@@ -24,18 +20,22 @@ namespace AgileRap_Process_Software_ModelV2.Controllers
             ViewBag.StatusBag = db.Status.Select(i => new SelectListItem() { Value = i.ID.ToString(), Text = i.StatusName });
             ViewBag.UserBag = db.User.Select(i => new SelectListItem() { Value = i.ID.ToString(), Text = i.Name });
             ViewBag.UserLogin = db.User.Where(b => b.ID == id);
+            ViewBag.UserFilterBag = SelectedSelectListItem(HttpContext.Session.GetString("AssignTo"));
+
 
         }
-        public ActionResult Index()
+        public ActionResult Index(string? AssignBy, string? AssignTo, string? Project, string? Status)
         {
-            var Works = GetWork();
+            List<Work> Works = GetWork();
+            Works = FilterWorks(Works, AssignBy, AssignTo, Project, Status);
             AllBag(GlobalVariable.GetUserLogin());
             return View(Works);
         }
-        public ActionResult Create()
+        public ActionResult Create(string? AssignBy, string? AssignTo, string? Project, string? Status)
         {
             //ดึงข้อมูล Work จาก Database
-            var Works = GetWork();
+            List<Work> Works = GetWork();
+            Works = FilterWorks(Works, AssignBy, AssignTo, Project, Status);
 
             Work work = new Work();
             work.Insert();
@@ -50,7 +50,7 @@ namespace AgileRap_Process_Software_ModelV2.Controllers
         public ActionResult Create(Work Work)
         {
             //ตัวจัดการ dropdown multi checkbox
-            if ((bool)Work.IsSelectAll)
+            if (Work.IsSelectAll)
             {
                 foreach (var item in db.User.ToList())
                 {
@@ -68,12 +68,12 @@ namespace AgileRap_Process_Software_ModelV2.Controllers
             }
             //*************************************************//
             db.Work.Add(Work);
-            //db.SaveChanges();
+            db.SaveChanges();
 
             //บันทึก Work ปัจจุบันลง WorkLog
             WorkLog workLog = new WorkLog();
             workLog.Insert(db, Work);
-            //db.SaveChanges();
+            db.SaveChanges();
 
             //วนลูปเพื่อบันทึก provider
             foreach (var ProviderItem in Work.Provider)
@@ -81,17 +81,18 @@ namespace AgileRap_Process_Software_ModelV2.Controllers
                 //บันทึก Provider ปัจจุบันลง ProviderLog
                 ProviderLog providerLog = new ProviderLog();
                 providerLog.Insert(db, workLog, ProviderItem.ID);
-                //db.SaveChanges();
+                db.SaveChanges();
             }
             //ส่งแจ้งเตือนผ่านเมล์
             SentEmailToProvider(Work);
             //กลับสู่หน้าหลัก
             return RedirectToAction("Index");
         }
-        public ActionResult Edit(int id)
+        public ActionResult Edit(int id, string? AssignBy, string? AssignTo, string? Project, string? Status)
         {
             //หาตัวที่ต้องการแก้ไขจาก id 
-            var Works = GetWork();
+            List<Work> Works = GetWork();
+            Works = FilterWorks(Works, AssignBy, AssignTo, Project, Status);
             var work = Works.Where(b => b.ID == id).FirstOrDefault();
             //************************************************//
 
@@ -111,39 +112,18 @@ namespace AgileRap_Process_Software_ModelV2.Controllers
             }
             //==================================================//
 
-            //ทำ SelectListItem ให้กับ Dropdown multi checkbox เพื่อให้มีค่าตรงกับ Provider ใน Database
-            List<SelectListItem> list = new List<SelectListItem>();
-            foreach (var item in db.User)
-            {
-                SelectListItem selectListItem = new SelectListItem();
-                selectListItem.Value = item.ID.ToString();
-                selectListItem.Text = item.Name;
-                foreach (var item2 in work.Provider)
-                {
-                    if (item2.UserID == item.ID)
-                    {
-                        selectListItem.Selected = true;
-                        break;
-                    }
-                    else
-                    {
-                        selectListItem.Selected = false;
-                    }
-                }
-                list.Add(selectListItem);
-            }
-            //---------------------------------------------------//
 
             ViewBag.Model = Works;
             AllBag(GlobalVariable.GetUserLogin());
-            ViewBag.UserBag = list;
+            ViewBag.UserBag = SelectedSelectListItem(work.ProviderIDs);
+            ViewBag.UserFilterBag = SelectedSelectListItem(HttpContext.Session.GetString("AssignTo"));
             return View(work);
         }
         [HttpPost]
         public ActionResult Edit(Work work)
         {
             //เช็คว่ามีการเปลี่ยนแปลงค่าไหม  ไม่มีค่าที่เปลี่ยนแปลง ไม่ต้องบันทึก Log
-            var Works = GetWork();
+            List<Work> Works = GetWork();
             var temp = Works.Where(b => b.ID == work.ID).ToList().First();
             if (work.Project == temp.Project &&
                 work.Name == temp.Name &&
@@ -243,9 +223,10 @@ namespace AgileRap_Process_Software_ModelV2.Controllers
             //ส่งไปทำ Action Index ต่อไป
             return RedirectToAction("Index");
         }
-        public ActionResult History(int id)
+        public ActionResult History(int id, string? AssignBy, string? AssignTo, string? Project, string? Status)
         {
-            var Works = GetWork();
+            List<Work> Works = GetWork();
+            Works = FilterWorks(Works, AssignBy, AssignTo, Project, Status);
 
             //วนหา ID ที่ ผู้ใช้งานต้องการดู History
             foreach (var work in Works)
@@ -307,12 +288,15 @@ namespace AgileRap_Process_Software_ModelV2.Controllers
             }
             //นำ IDและName ของ Provider ที่ดึงมาจาก Database ไปเปลี่ยนเป็น Text เก็บไว้ที่ ProviderList และ ProviderIDs
             ConvertProviderToAssignText(Works);
+
+
+
             return Works;
         }
         [HttpPost]
         public ActionResult UpdateStatus(Work work)
         {
-            var Works = GetWork();
+            List<Work> Works = GetWork();
             if (work.DueDate == null) { work.StatusID = 1; } else { work.StatusID = 2; }
             AllBag(GlobalVariable.GetUserLogin());
             Works.Add(work);
@@ -369,13 +353,11 @@ namespace AgileRap_Process_Software_ModelV2.Controllers
             //กำหนดข้อความที่จะส่งไปในเมล์
             string contentText = $"" +
                 $"<h1>Hello</h1>" +
-                $"<h2>Subject {work.Project}</h2> " +
-                $"<h3>Name {work.Name}</h3>" +
+                $"<h2>Subject {work.Project} : {work.Name}</h2> " +
                 $"<p>Form {HttpContext.RequestServices.GetService<EmailConfiguration>().From}</p>" +
                 $"<p>Status : {work.Status.StatusName}</p>" +
                 $"<p>Due Date : {work.DueDate}</p>" +
                 $"<p>Remark : {work.Remark}</p>" +
-                $"" +
                 $"<p>Assign by {db.User.Where(b => b.ID == GlobalVariable.GetUserLogin()).First().Name}</p>" +
                 $"";
 
@@ -386,6 +368,59 @@ namespace AgileRap_Process_Software_ModelV2.Controllers
             _emailSender.SendEmail(message);
         }
 
+        private List<Work> FilterWorks(List<Work> Works, string? AssignBy, string? AssignTo, string? Project, string? Status)
+        {
+            //filter All Works
+            if (AssignBy != null) { Works = Works.Where(b => b.CreateBy == int.Parse(AssignBy)).ToList(); HttpContext.Session.SetString("AssignBy", AssignBy); }
+            if (Project != null) { Works = Works.Where(b => b.Project == Project).ToList(); HttpContext.Session.SetString("Project", Project); }
+            if (Status != null) { Works = Works.Where(b => b.StatusID == int.Parse(Status)).ToList(); HttpContext.Session.SetString("Status", Status); }
+            if (AssignTo != null)
+            {
+                //Credit P Terng
+                string[] strings = AssignTo.Split(',');
+                foreach (var work in Works)
+                {
+                    if (work.Provider.Where(w => strings.Contains(w.UserID.ToString()) == true).Count() > 0) { work.IsFound = true; }
+                }
+                Works = Works.Where(b => b.IsFound == true).ToList();
+                HttpContext.Session.SetString("AssignTo", AssignTo);
+            }
+            else
+            {
+                HttpContext.Session.SetString("AssignTo", "");
+            }
+            //=========================================================//
+            return Works;
+        }
+        public List<SelectListItem> SelectedSelectListItem(string Liststring)
+        {
+            //ทำ SelectListItem ให้กับ Dropdown multi checkbox เพื่อให้มีค่าตรงกับ Provider ใน Database
+            List<SelectListItem> list = new List<SelectListItem>();
+            foreach (var item in db.User)
+            {
+                SelectListItem selectListItem = new SelectListItem();
+                selectListItem.Value = item.ID.ToString();
+                selectListItem.Text = item.Name;
+                if (Liststring != null)
+                {
+                    foreach (var item2 in Liststring.Split(','))
+                    {
+                        if (item2 == item.ID.ToString())
+                        {
+                            selectListItem.Selected = true;
+                            break;
+                        }
+                        else
+                        {
+                            selectListItem.Selected = false;
+                        }
+                    }
+                }
+                list.Add(selectListItem);
+            }
+            //---------------------------------------------------//
+            return list;
 
+        }
     }
 }

@@ -5,15 +5,6 @@
     Microsoft.EntityFrameworkCore.Query.Internal.EntityQueryable<SelectListItem> UserBag = ViewBag.UserBag;
     Microsoft.EntityFrameworkCore.Query.Internal.EntityQueryable<User> Luser = ViewBag.UserLogin;
 }
-<script>
-    function FuncOperator() {
-        console.log(document.getElementById("DivOperatorBtn"));
-
-    }
-    function FuncController() {
-
-    }
-</script>
 
 <div class="row">
     <div class="col-md-3">
@@ -28,29 +19,34 @@
 <br />
 <br />
 
-@*ทำตัวกรอง*@
-@using (Html.BeginForm("Index", "Works", FormMethod.Get, new { @class = "" }))
+@using (Html.BeginForm("Index", "Works", FormMethod.Get, new {}))
 {
+    @Html.Hidden("IsSelect")
+    @Html.Hidden("AssignTo")
     <div class="row">
         <div id="DivOperatorBtn" class="col-md-1 text-end" style="padding:1px;">
-            <input value="Operator" type="button" class="btn btn-outline-success" onclick="FuncOperator()" />
+            <input id="OperatorBtn" value="Operator" type="button" class="btn btn-outline-success" onclick="FuncOperator()" />
         </div>
         <div id="DivControllerBtn" class="col-md-1" style="padding:1px;">
-            <input value="Controller" type="button" class="btn btn-outline-danger" onclick="FuncController()" />
+            <input id="ControllerBtn" value="Controller" type="button" class="btn btn-outline-danger" onclick="FuncController()" />
         </div>
     </div>
+    <br />
     <div class="row">
         <div class="col-auto">
             @Html.DisplayNameFor(b => b.First().CreateBy)
         </div>
         <div class="col-md-1">
-            @Html.DropDownList("AssignBy", new SelectList(UserBag, "Value", "Text", Context.Session.GetInt32("UserID")), "Select Requester", new { @class = "form-select" })
+            @Html.DropDownList("AssignBy", new SelectList(UserBag, "Value", "Text",Luser.First().ID), "Select Requester", new { @class = "form-select" })
         </div>
         <div class="col-auto">
             @Html.DisplayNameFor(b => b.First().ProviderList)
         </div>
         <div class="col-md-2">
-            @Html.DropDownList("AssignTo", new SelectList(UserBag, "Value", "Text"), "Select Provider", new { @class = "form-select" })
+            @* @Html.DropDownList("AssignTo", new SelectList(UserBag, "Value", "Text"), "Select Provider", new { @class = "form-select" }) *@
+            <select hidden id="select-filter-options" asp-items="@ViewBag.UserFilterBag" multiple>
+            </select>
+
         </div>
         <div class="col-auto">
             @Html.DisplayNameFor(b => b.First().Project)
@@ -63,6 +59,9 @@
         </div>
         <div class="col-md-2">
             @Html.DropDownList("Status", new SelectList(UserBag, "Value", "Text"), "Select Status", new { @class = "form-select" })
+        </div>
+        <div class="col-md-1">
+            <input value="Search" type="submit" class="btn btn-dark"  />
         </div>
     </div>
 }
@@ -149,3 +148,73 @@
 
     </tbody>
 </table>
+
+<script>
+    document.addEventListener("load", FuncOperator());
+
+    function FuncOperator() {
+        console.log("Operator");
+        document.getElementById('OperatorBtn').setAttribute('disabled', '');
+        document.getElementById('ControllerBtn').removeAttribute('disabled');
+
+    }
+    function FuncController() {
+        console.log("Controller");
+        document.getElementById('OperatorBtn').removeAttribute('disabled');
+        document.getElementById('ControllerBtn').setAttribute('disabled', '');
+    }
+    
+    document.addEventListener("DOMContentLoaded",
+    () => {
+
+        $('#select-filter-options').multiselect({
+            buttonClass: 'form-select',
+            nonSelectedText: 'Select Provider',
+            buttonContainer: '<div class="btn-success" id="select-tops-options-container"></div>',
+            selectedClass: 'active multiselect-selected',
+            numberDisplayed: 5,
+            buttonWidth: '10em',
+            includeSelectAllOption: true,
+            onSelectAll: function (options) {
+                document.getElementById("IsSelect").value = true;
+            },
+            onDeselectAll: function (options) {
+                document.getElementById("IsSelect").value = false;
+            },
+            //includeResetOption: true,
+            //selectAllName: 'select-all-name',
+            onChange: function (option, checked) {
+                /*
+                 * Not there yet
+                 */
+                document.getElementById("IsSelect").value = false;
+
+                if (checked) {
+                    document.querySelectorAll(`[value="${$(option[0])[0].value}"]`)[1].ariaChecked = "true";
+                    document.querySelectorAll(`[value="${$(option[0])[0].value}"]`)[0].ariaChecked = "true";
+                } else {
+                    document.querySelectorAll(`[value="${$(option[0])[0].value}"]`)[1].ariaChecked = "false";
+                    document.querySelectorAll(`[value="${$(option[0])[0].value}"]`)[0].ariaChecked = "false";
+                }
+                
+                //$("#select-tops-options").multiselect('deselect', '1');
+                var toppings = $('#select-filter-options option:selected');
+
+                var selected = [];
+                $(toppings).each(function (index, item) {
+                    selected.push([$(this).val()]);
+                });
+
+                document.getElementById("AssignTo").value = selected.join(',');
+            },
+            templates: {
+                button:
+                    '<button type="button" class="multiselect dropdown-toggle" ' +
+                    'data-bs-toggle="dropdown"><span class="multiselect-selected-text"></span></button>',
+                resetButton: '<div class="multiselect-reset text-center p-2"><button type="button" class="btn btn-sm btn-danger"></button></div>'
+            }
+        });
+    });
+
+</script>
+

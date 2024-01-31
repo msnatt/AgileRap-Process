@@ -41,6 +41,8 @@ namespace AgileRap_Process_Software_ModelV2.Models
         public string? ProviderIDs { get; set; }
         [NotMapped]
         public bool IsSelectAll { get; set; }
+        [NotMapped]
+        public bool IsFound { get; set; }
 
         [NotMapped]
         [DisplayName("Assign To/Provider")]
