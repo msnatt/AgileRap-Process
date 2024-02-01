@@ -5,9 +5,8 @@ using System.Diagnostics;
 
 namespace AgileRap_Process_Software_ModelV2.Controllers
 {
-    public class HomeController : Controller
+    public class HomeController : BaseController
     {
-        private AgileRap_Process_Software_Context db = new AgileRap_Process_Software_Context();
         [HttpGet]
         public ActionResult Index()
         {
@@ -25,9 +24,10 @@ namespace AgileRap_Process_Software_ModelV2.Controllers
 
                 //set static UserID variable
                 GlobalVariable.SetUserLogin(UserSelected.ID);
+                HttpContext.Session.SetString("Default","Operator");
 
                 //ส่งไปที่หน้า Index ของ Work
-                return RedirectToAction("Index", "Works");
+                return RedirectToAction("Index", "Works", new {AssignBy = GlobalVariable.GetUserLogin()});
             }
             //************************************************//
 

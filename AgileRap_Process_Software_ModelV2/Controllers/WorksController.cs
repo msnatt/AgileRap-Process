@@ -11,31 +11,31 @@ using AgileRap_Process_Software_ModelV2.Common;
 
 namespace AgileRap_Process_Software_ModelV2.Controllers
 {
-    public class WorksController : Controller
+    public class WorksController : BaseController
     {
-        private AgileRap_Process_Software_Context db = new AgileRap_Process_Software_Context();
-
         public void AllBag(int id)
         {
             ViewBag.StatusBag = db.Status.Select(i => new SelectListItem() { Value = i.ID.ToString(), Text = i.StatusName });
             ViewBag.UserBag = db.User.Select(i => new SelectListItem() { Value = i.ID.ToString(), Text = i.Name });
+            List<SelectListItem> ListWorkTemp = db.Work.Select(i => new SelectListItem() { Value = i.Project, Text = i.Project }).ToList();
+            ViewBag.WorkBag = ListWorkTemp.DistinctBy(b => b.Value);
             ViewBag.UserLogin = db.User.Where(b => b.ID == id);
             ViewBag.UserFilterBag = SelectedSelectListItem(HttpContext.Session.GetString("AssignTo"));
-
-
         }
-        public ActionResult Index(string? AssignBy, string? AssignTo, string? Project, string? Status)
+
+        public ActionResult Index(string? AssignBy, string? AssignTo, string? Project, string? Status, bool? IsChangePage)
         {
             List<Work> Works = GetWork();
-            Works = FilterWorks(Works, AssignBy, AssignTo, Project, Status);
+            Works = FilterWorks(Works, AssignBy, AssignTo, Project, Status, IsChangePage);
             AllBag(GlobalVariable.GetUserLogin());
+
             return View(Works);
         }
-        public ActionResult Create(string? AssignBy, string? AssignTo, string? Project, string? Status)
+        public ActionResult Create(string? AssignBy, string? AssignTo, string? Project, string? Status, bool? IsChangePage)
         {
             //ดึงข้อมูล Work จาก Database
             List<Work> Works = GetWork();
-            Works = FilterWorks(Works, AssignBy, AssignTo, Project, Status);
+            Works = FilterWorks(Works, AssignBy, AssignTo, Project, Status, IsChangePage);
 
             Work work = new Work();
             work.Insert();
@@ -56,6 +56,7 @@ namespace AgileRap_Process_Software_ModelV2.Controllers
                 {
                     Provider provider = new Provider();
                     provider.Insert(db, Work, item.ID);
+                    Work.Provider.Add(provider);
                 }
             }
             else
@@ -64,6 +65,7 @@ namespace AgileRap_Process_Software_ModelV2.Controllers
                 {
                     Provider provider = new Provider();
                     provider.Insert(db, Work, int.Parse(item));
+                    Work.Provider.Add(provider);
                 }
             }
             //*************************************************//
@@ -81,18 +83,18 @@ namespace AgileRap_Process_Software_ModelV2.Controllers
                 //บันทึก Provider ปัจจุบันลง ProviderLog
                 ProviderLog providerLog = new ProviderLog();
                 providerLog.Insert(db, workLog, ProviderItem.ID);
-                db.SaveChanges();
             }
+            db.SaveChanges();
             //ส่งแจ้งเตือนผ่านเมล์
             SentEmailToProvider(Work);
             //กลับสู่หน้าหลัก
             return RedirectToAction("Index");
         }
-        public ActionResult Edit(int id, string? AssignBy, string? AssignTo, string? Project, string? Status)
+        public ActionResult Edit(int id, string? AssignBy, string? AssignTo, string? Project, string? Status, bool? IsChangePage)
         {
             //หาตัวที่ต้องการแก้ไขจาก id 
             List<Work> Works = GetWork();
-            Works = FilterWorks(Works, AssignBy, AssignTo, Project, Status);
+            Works = FilterWorks(Works, AssignBy, AssignTo, Project, Status, IsChangePage);
             var work = Works.Where(b => b.ID == id).FirstOrDefault();
             //************************************************//
 
@@ -122,111 +124,22 @@ namespace AgileRap_Process_Software_ModelV2.Controllers
         [HttpPost]
         public ActionResult Edit(Work work)
         {
-            //เช็คว่ามีการเปลี่ยนแปลงค่าไหม  ไม่มีค่าที่เปลี่ยนแปลง ไม่ต้องบันทึก Log
-            List<Work> Works = GetWork();
-            var temp = Works.Where(b => b.ID == work.ID).ToList().First();
-            if (work.Project == temp.Project &&
-                work.Name == temp.Name &&
-                work.DueDate == temp.DueDate &&
-                work.StatusID == temp.StatusID &&
-                work.Remark == temp.Remark &&
-                work.IsSelectAll != true &&
-                work.ProviderIDs == temp.ProviderIDs &&
-                work.ProviderList == temp.ProviderList &&
-                work.Provider.Count == temp.Provider.Count)
+            //1. ตรวจสอบรายการว่ามีการเปลี่ยนแปลงค่าหรือไม่
+            bool check = FuncCheckDulicateData(work);
+            if (check)
             {
-                bool IsNotEqual = false;
-                for (int i = 0; i < work.Provider.Count; i++)
-                {
-                    if (work.Provider.ElementAt(i).ID != temp.Provider.ElementAt(i).ID)
-                    {
-                        IsNotEqual = true;
-                    }
-                }
-                if (!IsNotEqual)
-                {
-                    return RedirectToAction("Index");
-                }
+                db.ChangeTracker.Clear();
+                //UPDATE work
+                work.Update(db);
+
             }
-            //*************************************************//
-
-            db.ChangeTracker.Clear();
-            //UPDATE work
-            work.Update(db);
-
-            //นำ Work ปัจจุบันไปเก็บไว้เป็น Log
-            WorkLog workLog = new WorkLog();
-            workLog.Insert(db, work);
-
-            //ProviderIDs ที่ join กันมาเป็น string มาแบ่งออกเก็บไว้ใน List strings
-            List<string> strings = new List<string>();
-            if (work.ProviderIDs != null) { strings = work.ProviderIDs.Split(',').ToList(); }
-
-
-            //กรณีไม่ได้เลือก provider เข้ามาเลย
-            if (strings.Count == 0 && work.IsSelectAll == false)
-            {
-                foreach (var item in work.Provider)
-                {
-                    db.Provider.Remove(item);
-                }
-            }
-            //กรณีเลือก provider ทั้งหมด
-            else if (work.IsSelectAll)
-            {
-                foreach (var item in work.Provider)
-                {
-                    db.Provider.Remove(item);
-                }
-                foreach (var item in db.User.ToList())
-                {
-                    Provider provider = new Provider();
-                    provider.Insert(db, work, item.ID);
-
-                    ProviderLog providerLog = new ProviderLog();
-                    providerLog.Insert(db, workLog, item.ID);
-                    db.SaveChanges();
-                }
-
-                // ทำ List strings ให้ว่าง
-                strings = new List<string>();
-            }
-
-            //กรณีเลือก providerมาบางส่วน
-            foreach (string s in strings)
-            {
-                bool isvalid = false;
-                foreach (var item in work.Provider)
-                {
-                    if (s == item.UserID.ToString())
-                    {
-                        isvalid = true;
-                    }
-                    if (!strings.Contains(item.UserID.ToString()))
-                    {
-                        db.Provider.Remove(item);
-                    }
-                }
-                if (!isvalid)
-                {
-                    Provider provider = new Provider();
-                    provider.Insert(db, work, int.Parse(s));
-
-                }
-                ProviderLog providerLog = new ProviderLog();
-                providerLog.Insert(db, workLog, int.Parse(s));
-                db.SaveChanges();
-            }
-            //บันทึกการเปลี่ยนแปลงลง Database
-            db.SaveChanges();
-
             //ส่งไปทำ Action Index ต่อไป
             return RedirectToAction("Index");
         }
-        public ActionResult History(int id, string? AssignBy, string? AssignTo, string? Project, string? Status)
+        public ActionResult History(int id, string? AssignBy, string? AssignTo, string? Project, string? Status, bool? IsChangePage)
         {
             List<Work> Works = GetWork();
-            Works = FilterWorks(Works, AssignBy, AssignTo, Project, Status);
+            Works = FilterWorks(Works, AssignBy, AssignTo, Project, Status, IsChangePage);
 
             //วนหา ID ที่ ผู้ใช้งานต้องการดู History
             foreach (var work in Works)
@@ -367,9 +280,13 @@ namespace AgileRap_Process_Software_ModelV2.Controllers
             //ทำการส่ง Email ไปตามใน EmailList
             _emailSender.SendEmail(message);
         }
-
-        private List<Work> FilterWorks(List<Work> Works, string? AssignBy, string? AssignTo, string? Project, string? Status)
+        private List<Work> FilterWorks(List<Work> Works, string? AssignBy, string? AssignTo, string? Project, string? Status, bool? IsChangePage)
         {
+            if (IsChangePage == null && AssignBy == null) { HttpContext.Session.Remove("AssignBy"); }
+            if (IsChangePage == null && AssignTo == null) { HttpContext.Session.Remove("AssignTo"); }
+            if (IsChangePage == null && Project == null) { HttpContext.Session.Remove("Project"); }
+            if (IsChangePage == null && Status == null) { HttpContext.Session.Remove("Status"); }
+
             //filter All Works
             if (AssignBy != null) { Works = Works.Where(b => b.CreateBy == int.Parse(AssignBy)).ToList(); HttpContext.Session.SetString("AssignBy", AssignBy); }
             if (Project != null) { Works = Works.Where(b => b.Project == Project).ToList(); HttpContext.Session.SetString("Project", Project); }
@@ -384,10 +301,6 @@ namespace AgileRap_Process_Software_ModelV2.Controllers
                 }
                 Works = Works.Where(b => b.IsFound == true).ToList();
                 HttpContext.Session.SetString("AssignTo", AssignTo);
-            }
-            else
-            {
-                HttpContext.Session.SetString("AssignTo", "");
             }
             //=========================================================//
             return Works;
@@ -422,5 +335,32 @@ namespace AgileRap_Process_Software_ModelV2.Controllers
             return list;
 
         }
+        private bool FuncCheckDulicateData(Work work)
+        {
+            List<Work> Works = GetWork();
+            var temp = Works.Where(b => b.ID == work.ID).ToList().First();
+            if (work.Project == temp.Project &&
+                work.Name == temp.Name &&
+                work.DueDate == temp.DueDate &&
+                work.StatusID == temp.StatusID &&
+                work.Remark == temp.Remark &&
+                work.IsSelectAll != true &&
+                work.ProviderIDs == temp.ProviderIDs &&
+                work.ProviderList == temp.ProviderList &&
+                work.Provider.Count == temp.Provider.Count)
+            {
+                bool IsNotEqual = false;
+                for (int i = 0; i < work.Provider.Count; i++)
+                {
+                    if (work.Provider.ElementAt(i).ID != temp.Provider.ElementAt(i).ID)
+                    {
+                        IsNotEqual = true;
+                    }
+                }
+                return IsNotEqual;
+            }
+            else { return true; }
+        }
+
     }
 }

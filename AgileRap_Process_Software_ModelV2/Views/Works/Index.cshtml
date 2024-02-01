@@ -4,13 +4,14 @@
     ViewData["Title"] = "Index";
     Microsoft.EntityFrameworkCore.Query.Internal.EntityQueryable<SelectListItem> UserBag = ViewBag.UserBag;
     Microsoft.EntityFrameworkCore.Query.Internal.EntityQueryable<User> Luser = ViewBag.UserLogin;
+    string Text = Context.Session.GetString("Default");
 }
 
 <div class="row">
-    <div class="col-md-3">
-        <h1>รายการงาน</h1>
+    <div class="col-md-5">
+        <h1>รายการงาน(@Text)</h1>
     </div>
-    <div class="col-md-9 text-end">
+    <div class="col-md-6 text-end">
         @Luser.First().Name
         @Html.ActionLink("Logout", "Index", "Home", new { }, new { @class = "btn-outline-secondary" })
     </div>
@@ -19,7 +20,7 @@
 <br />
 <br />
 
-@using (Html.BeginForm("Index", "Works", FormMethod.Get, new {}))
+@using (Html.BeginForm("Index", "Works", FormMethod.Get, new { id = "SearchForm" }))
 {
     @Html.Hidden("IsSelect")
     @Html.Hidden("AssignTo")
@@ -36,13 +37,13 @@
         <div class="col-auto">
             @Html.DisplayNameFor(b => b.First().CreateBy)
         </div>
-        <div class="col-md-1">
-            @Html.DropDownList("AssignBy", new SelectList(UserBag, "Value", "Text",Luser.First().ID), "Select Requester", new { @class = "form-select" })
+        <div class="col-auto">
+            @Html.DropDownList("AssignBy", new SelectList(UserBag, "Value", "Text", Context.Session.GetString("AssignBy")), "Select Requester", new { @class = "form-select" })
         </div>
         <div class="col-auto">
             @Html.DisplayNameFor(b => b.First().ProviderList)
         </div>
-        <div class="col-md-2">
+        <div class="col-auto">
             @* @Html.DropDownList("AssignTo", new SelectList(UserBag, "Value", "Text"), "Select Provider", new { @class = "form-select" }) *@
             <select hidden id="select-filter-options" asp-items="@ViewBag.UserFilterBag" multiple>
             </select>
@@ -52,102 +53,137 @@
             @Html.DisplayNameFor(b => b.First().Project)
         </div>
         <div class="col-md-2">
-            @Html.DropDownList("Project", new SelectList(UserBag, "Value", "Text"), "Select Project", new { @class = "form-select" })
+            @Html.DropDownList("Project", new SelectList(ViewBag.WorkBag, "Value", "Text", Context.Session.GetString("Project")), "Select Project", new { @class = "form-select" })
         </div>
         <div class="col-auto">
             @Html.DisplayNameFor(b => b.First().StatusID)
         </div>
         <div class="col-md-2">
-            @Html.DropDownList("Status", new SelectList(UserBag, "Value", "Text"), "Select Status", new { @class = "form-select" })
+            @Html.DropDownList("Status", new SelectList(ViewBag.StatusBag, "Value", "Text", Context.Session.GetString("Status")), "Select Status", new { @class = "form-select" })
         </div>
         <div class="col-md-1">
-            <input value="Search" type="submit" class="btn btn-dark"  />
+            <input value="Search" type="submit" class="btn btn-dark" />
         </div>
     </div>
-}
 
-<table class="table table-borlesses">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.CreateDate)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Project)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Name)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.DueDate)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CreateBy)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.ProviderList)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.StatusID)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Remark)
-            </th>
-            <th>
-                @Html.DisplayName("Manage")
-            </th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Model)
-        {
+
+    <table class="table table-borlesses">
+        <thead>
             <tr>
-                <td>
-                    @Html.DisplayFor(modelItem => item.CreateDate)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.Project)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.Name)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.DueDate)
-                </td>
-                <td class="text-center">
-                    @Html.DisplayFor(modelItem => UserBag.Where(b => b.Value == item.CreateBy.ToString()).First().Text)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.ProviderList)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.Status.StatusName)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.Remark)
-                </td>
-                <td>
-                    @Html.ActionLink("Edit", "Edit", "Works", new { id = item.ID, UserID = Luser.First().ID }, new { @class = "btn btn-outline-secondary" }) |
-                    @Html.ActionLink("History", "History", "Works", new { id = item.ID, UserID = Luser.First().ID }, new { @class = "btn btn-outline-secondary" })
-                </td>
+                <th>
+                    @Html.DisplayNameFor(model => model.CreateDate)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Project)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Name)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.DueDate)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.CreateBy)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.ProviderList)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.StatusID)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Remark)
+                </th>
+                <th>
+                    @Html.DisplayName("Manage")
+                </th>
             </tr>
-        }
-        <tr>
-            <td class="text-center">
-                @Html.ActionLink("Create Task", "Create", "Works", new { UserID = Luser.First().ID }, new { @class = "btn btn-outline-primary" })
-            </td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-        </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.CreateDate)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Project)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Name)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.DueDate)
+                    </td>
+                    <td class="text-center">
+                        @Html.DisplayFor(modelItem => UserBag.Where(b => b.Value == item.CreateBy.ToString()).First().Text)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.ProviderList)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Status.StatusName)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Remark)
+                    </td>
+                    <td>
 
-    </tbody>
-</table>
+                        @Html.ActionLink("Edit", "Edit", "Works", new
+                            {
+                                id = item.ID,
+                                UserID = Luser.First().ID,
+                                AssignBy = Html.Value("AssignBy"),
+                                AssignTo = Html.Value("AssignTo"),
+                                Project = Html.Value("Project"),
+                                Status = Html.Value("Status"),
+                                IsChangePage = true
+
+                            }, new { @class = "btn btn-outline-secondary" }) |
+                        @* @Html.ActionLink("History", "History", "Works", new { id = item.ID, UserID = Luser.First().ID }, new { @class = "btn btn-outline-secondary" }) *@
+                        @Html.ActionLink("History", "History", "Works", new
+                            {
+                                id = item.ID,
+                                UserID = Luser.First().ID,
+                                AssignBy = Html.Value("AssignBy"),
+                                AssignTo = Html.Value("AssignTo"),
+                                Project = Html.Value("Project"),
+                                Status = Html.Value("Status"),
+                                IsChangePage = true
+
+                            }, new { @class = "btn btn-outline-secondary" })
+
+                    </td>
+                </tr>
+            }
+            <tr>
+                <td class="text-center">
+                    @* <a onclick="SubmitFormToCreate()" class="btn btn-outline-primary">Create Task</a> *@
+                    @Html.ActionLink("Create Task", "Create", "Works", new
+                        {
+                            UserID = Luser.First().ID,
+                            AssignBy = Html.Value("AssignBy"),
+                            AssignTo = Html.Value("AssignTo"),
+                            Project = Html.Value("Project"),
+                            Status = Html.Value("Status"),
+                            IsChangePage = true
+
+                        }, new { @class = "btn btn-outline-primary" })
+                    @* @Html.ActionLink("Create Task", "Create", "Works", new { UserID = Luser.First().ID }, new { @class = "btn btn-outline-primary" }) *@
+                </td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+
+        </tbody>
+    </table>
+}
 
 <script>
     document.addEventListener("load", FuncOperator());
@@ -163,58 +199,62 @@
         document.getElementById('OperatorBtn').removeAttribute('disabled');
         document.getElementById('ControllerBtn').setAttribute('disabled', '');
     }
-    
     document.addEventListener("DOMContentLoaded",
-    () => {
+        () => {
 
-        $('#select-filter-options').multiselect({
-            buttonClass: 'form-select',
-            nonSelectedText: 'Select Provider',
-            buttonContainer: '<div class="btn-success" id="select-tops-options-container"></div>',
-            selectedClass: 'active multiselect-selected',
-            numberDisplayed: 5,
-            buttonWidth: '10em',
-            includeSelectAllOption: true,
-            onSelectAll: function (options) {
-                document.getElementById("IsSelect").value = true;
-            },
-            onDeselectAll: function (options) {
-                document.getElementById("IsSelect").value = false;
-            },
-            //includeResetOption: true,
-            //selectAllName: 'select-all-name',
-            onChange: function (option, checked) {
-                /*
-                 * Not there yet
-                 */
-                document.getElementById("IsSelect").value = false;
+            $('#select-filter-options').multiselect({
+                buttonClass: 'form-select',
+                nonSelectedText: 'Select Provider',
+                buttonContainer: '<div class="btn-success" id="select-tops-options-container"></div>',
+                selectedClass: 'active multiselect-selected',
+                numberDisplayed: 3,
+                buttonWidth: '12em',
+                includeSelectAllOption: true,
+                onSelectAll: function (options) {
+                    document.getElementById("IsSelect").value = true;
+                },
+                onDeselectAll: function (options) {
+                    document.getElementById("IsSelect").value = false;
+                },
+                //includeResetOption: true,
+                //selectAllName: 'select-all-name',
+                onChange: function (option, checked) {
+                    /*
+                     * Not there yet
+                     */
+                    document.getElementById("IsSelect").value = false;
 
-                if (checked) {
-                    document.querySelectorAll(`[value="${$(option[0])[0].value}"]`)[1].ariaChecked = "true";
-                    document.querySelectorAll(`[value="${$(option[0])[0].value}"]`)[0].ariaChecked = "true";
-                } else {
-                    document.querySelectorAll(`[value="${$(option[0])[0].value}"]`)[1].ariaChecked = "false";
-                    document.querySelectorAll(`[value="${$(option[0])[0].value}"]`)[0].ariaChecked = "false";
+                    if (checked) {
+                        document.querySelectorAll(`[value="${$(option[0])[0].value}"]`)[1].ariaChecked = "true";
+                        document.querySelectorAll(`[value="${$(option[0])[0].value}"]`)[0].ariaChecked = "true";
+                    } else {
+                        document.querySelectorAll(`[value="${$(option[0])[0].value}"]`)[1].ariaChecked = "false";
+                        document.querySelectorAll(`[value="${$(option[0])[0].value}"]`)[0].ariaChecked = "false";
+                    }
+
+                    //$("#select-tops-options").multiselect('deselect', '1');
+                    var toppings = $('#select-filter-options option:selected');
+
+                    var selected = [];
+                    $(toppings).each(function (index, item) {
+                        selected.push([$(this).val()]);
+                    });
+
+                    document.getElementById("AssignTo").value = selected.join(',');
+                },
+                templates: {
+                    button:
+                        '<button type="button" class="multiselect" ' +
+                        'data-bs-toggle="dropdown"><span class="multiselect-selected-text"></span></button>',
+                    resetButton: '<div class="multiselect-reset text-center p-2"><button type="button" class="btn btn-sm btn-danger"></button></div>'
                 }
-                
-                //$("#select-tops-options").multiselect('deselect', '1');
-                var toppings = $('#select-filter-options option:selected');
+                //'<button type="button" class="multiselect dropdown-toggle" ' +
 
-                var selected = [];
-                $(toppings).each(function (index, item) {
-                    selected.push([$(this).val()]);
-                });
-
-                document.getElementById("AssignTo").value = selected.join(',');
-            },
-            templates: {
-                button:
-                    '<button type="button" class="multiselect dropdown-toggle" ' +
-                    'data-bs-toggle="dropdown"><span class="multiselect-selected-text"></span></button>',
-                resetButton: '<div class="multiselect-reset text-center p-2"><button type="button" class="btn btn-sm btn-danger"></button></div>'
-            }
+            });
         });
-    });
+
+
+
 
 </script>
 
