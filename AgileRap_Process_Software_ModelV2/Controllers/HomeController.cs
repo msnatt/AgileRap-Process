@@ -27,7 +27,7 @@ namespace AgileRap_Process_Software_ModelV2.Controllers
                 HttpContext.Session.SetString("Default","Operator");
 
                 //ส่งไปที่หน้า Index ของ Work
-                return RedirectToAction("Index", "Works", new {AssignBy = GlobalVariable.GetUserLogin()});
+                return RedirectToAction("Index", "Works", new {AssignTo = GlobalVariable.GetUserLogin()});
             }
             //************************************************//
 

@@ -22,16 +22,29 @@ namespace AgileRap_Process_Software_ModelV2.Controllers
             ViewBag.UserLogin = db.User.Where(b => b.ID == id);
             ViewBag.UserFilterBag = SelectedSelectListItem(HttpContext.Session.GetString("AssignTo"));
         }
-
-        public ActionResult Index(string? AssignBy, string? AssignTo, string? Project, string? Status, bool? IsChangePage)
+        private void FuncChangeMode(string? changeMode)
+        {
+            if (changeMode == "Operator")
+            {
+                HttpContext.Session.SetString("Default", "Operator");
+            }
+            else if (changeMode == "Controller")
+            {
+                HttpContext.Session.SetString("Default", "Controller");
+            }
+        }
+        public ActionResult Index(string? AssignBy, string? AssignTo, string? Project, string? Status, bool? IsChangePage, string? ChangeMode)
         {
             List<Work> Works = GetWork();
             Works = FilterWorks(Works, AssignBy, AssignTo, Project, Status, IsChangePage);
             AllBag(GlobalVariable.GetUserLogin());
 
+            //ChangeMode Operator or Controller
+            FuncChangeMode(ChangeMode);
+
             return View(Works);
         }
-        public ActionResult Create(string? AssignBy, string? AssignTo, string? Project, string? Status, bool? IsChangePage)
+        public ActionResult Create(string? AssignBy, string? AssignTo, string? Project, string? Status, bool? IsChangePage, string? ChangeMode)
         {
             //ดึงข้อมูล Work จาก Database
             List<Work> Works = GetWork();
@@ -42,6 +55,9 @@ namespace AgileRap_Process_Software_ModelV2.Controllers
 
             //เพิ่มข้อมูลที่พึ่งสร้างขึ้นมาเข้าไปที่ Work ที่ดึงมาจาก database
             Works.Add(work);
+
+            //ChangeMode Operator or Controller
+            FuncChangeMode(ChangeMode);
 
             AllBag(GlobalVariable.GetUserLogin());
             return View(Works);
@@ -90,35 +106,28 @@ namespace AgileRap_Process_Software_ModelV2.Controllers
             //กลับสู่หน้าหลัก
             return RedirectToAction("Index");
         }
-        public ActionResult Edit(int id, string? AssignBy, string? AssignTo, string? Project, string? Status, bool? IsChangePage)
+        public ActionResult Edit(int id, string? AssignBy, string? AssignTo, string? Project, string? Status, bool? IsChangePage, string? ChangeMode)
         {
             //หาตัวที่ต้องการแก้ไขจาก id 
             List<Work> Works = GetWork();
             Works = FilterWorks(Works, AssignBy, AssignTo, Project, Status, IsChangePage);
             var work = Works.Where(b => b.ID == id).FirstOrDefault();
+
+            //เช็คว่าที่กรองมา มี id ที่ตรงกับที่ผู้ใช้ต้องการ Edit ไหม 
+            if (Works.Where(b => b.ID == id).Count() == 0)
+            {
+                //ถ้าไม่ย้อนกลับไปหน้า Index
+                return RedirectToAction("Index", Works);
+            }
+
             //************************************************//
 
-            //ทำ field ProviderIDs ให้มีค่าตาม Provider ที่ดึงมาจาก Database
-            var c = 0;
-            if (work.Provider.Count > 0)
-            {
-                work.ProviderIDs = work.Provider.First().UserID.ToString();
-            }
-            foreach (var item in work.Provider)
-            {
-                if (c != 0)
-                {
-                    work.ProviderIDs = work.ProviderIDs + ',' + item.UserID.ToString();
-                }
-                c++;
-            }
-            //==================================================//
-
+            //ChangeMode Operator or Controller
+            FuncChangeMode(ChangeMode);
 
             ViewBag.Model = Works;
             AllBag(GlobalVariable.GetUserLogin());
             ViewBag.UserBag = SelectedSelectListItem(work.ProviderIDs);
-            ViewBag.UserFilterBag = SelectedSelectListItem(HttpContext.Session.GetString("AssignTo"));
             return View(work);
         }
         [HttpPost]
@@ -131,15 +140,20 @@ namespace AgileRap_Process_Software_ModelV2.Controllers
                 db.ChangeTracker.Clear();
                 //UPDATE work
                 work.Update(db);
-
             }
+
             //ส่งไปทำ Action Index ต่อไป
             return RedirectToAction("Index");
         }
-        public ActionResult History(int id, string? AssignBy, string? AssignTo, string? Project, string? Status, bool? IsChangePage)
+        public ActionResult History(int id, string? AssignBy, string? AssignTo, string? Project, string? Status, bool? IsChangePage, string? ChangeMode)
         {
-            List<Work> Works = GetWork();
-            Works = FilterWorks(Works, AssignBy, AssignTo, Project, Status, IsChangePage);
+            List<Work> Works = db.Work.Where(b => b.ID == id).ToList();
+            
+            List<Work> works = GetWork();
+            works = FilterWorks(works, AssignBy, AssignTo, Project, Status, IsChangePage);
+
+            works = works.Where(b => b.ID != Works.First().ID).ToList();
+            Works.AddRange(works);
 
             //วนหา ID ที่ ผู้ใช้งานต้องการดู History
             foreach (var work in Works)
@@ -169,6 +183,8 @@ namespace AgileRap_Process_Software_ModelV2.Controllers
                     }
                 }
             }
+            //ChangeMode Operator or Controller
+            FuncChangeMode(ChangeMode);
 
             ViewBag.IDBag = id;
             AllBag(GlobalVariable.GetUserLogin());

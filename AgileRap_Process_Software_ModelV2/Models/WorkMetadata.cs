@@ -43,6 +43,14 @@ namespace AgileRap_Process_Software_ModelV2.Models
         public bool IsSelectAll { get; set; }
         [NotMapped]
         public bool IsFound { get; set; }
+        [NotMapped]
+        public string DueDateText
+        {
+            get
+            {
+                return DueDate.Value.Date.ToString("dd/MM/yyyy");
+            }
+        }
 
         [NotMapped]
         [DisplayName("Assign To/Provider")]
@@ -68,63 +76,62 @@ namespace AgileRap_Process_Software_ModelV2.Models
 
             //ProviderIDs ที่ join กันมาเป็น string มาแบ่งออกเก็บไว้ใน List strings
             List<string> strings = new List<string>();
-                if (this.ProviderIDs != null) { strings = this.ProviderIDs.Split(',').ToList(); }
+            if (this.ProviderIDs != null) { strings = this.ProviderIDs.Split(',').ToList(); }
 
-                //กรณีไม่ได้เลือก provider เข้ามาเลย
-                if (strings.Count == 0 && this.IsSelectAll == false)
+            //กรณีไม่ได้เลือก provider เข้ามาเลย
+            if (strings.Count == 0 && this.IsSelectAll == false)
+            {
+                foreach (var item in this.Provider)
                 {
-                    foreach (var item in this.Provider)
-                    {
-                        db.Provider.Remove(item);
-                    }
+                    db.Provider.Remove(item);
                 }
-                //กรณีเลือก provider ทั้งหมด
-                else if (this.IsSelectAll)
+            }
+            //กรณีเลือก provider ทั้งหมด
+            else if (this.IsSelectAll)
+            {
+                foreach (var item in this.Provider)
                 {
-                    foreach (var item in this.Provider)
-                    {
-                        db.Provider.Remove(item);
-                    }
-                    foreach (var item in db.User.ToList())
-                    {
-                        Provider provider = new Provider();
-                        provider.Insert(db, this, item.ID);
-
-                        ProviderLog providerLog = new ProviderLog();
-                        providerLog.Insert(db, workLog, item.ID);
-                        db.SaveChanges();
-                    }
-
-                    // ทำ List strings ให้ว่าง
-                    strings = new List<string>();
+                    db.Provider.Remove(item);
                 }
-
-                //กรณีเลือก providerมาบางส่วน
-                foreach (string s in strings)
+                foreach (var item in db.User.ToList())
                 {
-                    bool isvalid = false;
-                    foreach (var item in this.Provider)
-                    {
-                        if (s == item.UserID.ToString())
-                        {
-                            isvalid = true;
-                        }
-                        if (!strings.Contains(item.UserID.ToString()))
-                        {
-                            db.Provider.Remove(item);
-                        }
-                    }
-                    if (!isvalid)
-                    {
-                        Provider provider = new Provider();
-                        provider.Insert(db, this, int.Parse(s));
-                    }
+                    Provider provider = new Provider();
+                    provider.Insert(db, this, item.ID);
+
                     ProviderLog providerLog = new ProviderLog();
-                    providerLog.Insert(db, workLog, int.Parse(s));
+                    providerLog.Insert(db, workLog, item.ID);
                     db.SaveChanges();
                 }
-                //บันทึกการเปลี่ยนแปลงลง Database
+                // ทำ List strings ให้ว่าง
+                strings = new List<string>();
+            }
+
+            //กรณีเลือก provider มาบางส่วน
+            foreach (string s in strings)
+            {
+                bool isvalid = false;
+                foreach (var item in this.Provider)
+                {
+                    if (s == item.UserID.ToString())
+                    {
+                        isvalid = true;
+                    }
+                    if (!strings.Contains(item.UserID.ToString()))
+                    {
+                        db.Provider.Remove(item);
+                    }
+                }
+                if (!isvalid)
+                {
+                    Provider provider = new Provider();
+                    provider.Insert(db, this, int.Parse(s));
+                }
+                ProviderLog providerLog = new ProviderLog();
+                providerLog.Insert(db, workLog, int.Parse(s));
                 db.SaveChanges();
+            }
+            //บันทึกการเปลี่ยนแปลงลง Database
+            db.SaveChanges();
         }
 
     }

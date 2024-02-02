@@ -20,10 +20,11 @@
 <br />
 <br />
 
-@using (Html.BeginForm("Index", "Works", FormMethod.Get, new { id = "SearchForm" }))
+@using (Html.BeginForm("Index", "Works", FormMethod.Get, new { id = "FilterForm", name = "FilterForm" }))
 {
     @Html.Hidden("IsSelect")
     @Html.Hidden("AssignTo")
+    @Html.Hidden("ChangeMode")
     <div class="row">
         <div id="DivOperatorBtn" class="col-md-1 text-end" style="padding:1px;">
             <input id="OperatorBtn" value="Operator" type="button" class="btn btn-outline-success" onclick="FuncOperator()" />
@@ -44,10 +45,8 @@
             @Html.DisplayNameFor(b => b.First().ProviderList)
         </div>
         <div class="col-auto">
-            @* @Html.DropDownList("AssignTo", new SelectList(UserBag, "Value", "Text"), "Select Provider", new { @class = "form-select" }) *@
             <select hidden id="select-filter-options" asp-items="@ViewBag.UserFilterBag" multiple>
             </select>
-
         </div>
         <div class="col-auto">
             @Html.DisplayNameFor(b => b.First().Project)
@@ -65,7 +64,6 @@
             <input value="Search" type="submit" class="btn btn-dark" />
         </div>
     </div>
-
 
     <table class="table table-borlesses">
         <thead>
@@ -128,7 +126,6 @@
                         @Html.DisplayFor(modelItem => item.Remark)
                     </td>
                     <td>
-
                         @Html.ActionLink("Edit", "Edit", "Works", new
                             {
                                 id = item.ID,
@@ -140,7 +137,6 @@
                                 IsChangePage = true
 
                             }, new { @class = "btn btn-outline-secondary" }) |
-                        @* @Html.ActionLink("History", "History", "Works", new { id = item.ID, UserID = Luser.First().ID }, new { @class = "btn btn-outline-secondary" }) *@
                         @Html.ActionLink("History", "History", "Works", new
                             {
                                 id = item.ID,
@@ -158,7 +154,6 @@
             }
             <tr>
                 <td class="text-center">
-                    @* <a onclick="SubmitFormToCreate()" class="btn btn-outline-primary">Create Task</a> *@
                     @Html.ActionLink("Create Task", "Create", "Works", new
                         {
                             UserID = Luser.First().ID,
@@ -169,7 +164,6 @@
                             IsChangePage = true
 
                         }, new { @class = "btn btn-outline-primary" })
-                    @* @Html.ActionLink("Create Task", "Create", "Works", new { UserID = Luser.First().ID }, new { @class = "btn btn-outline-primary" }) *@
                 </td>
                 <td></td>
                 <td></td>
@@ -186,21 +180,44 @@
 }
 
 <script>
-    document.addEventListener("load", FuncOperator());
-
     function FuncOperator() {
-        console.log("Operator");
         document.getElementById('OperatorBtn').setAttribute('disabled', '');
         document.getElementById('ControllerBtn').removeAttribute('disabled');
+        document.getElementById('AssignBy').value = null;
+        document.getElementById('AssignTo').value = @Luser.First().ID;
+        document.getElementById('Project').value = null;
+        document.getElementById('Status').value = null;
+        document.getElementById('ChangeMode').value = "Operator";
 
+
+        $("#FilterForm").attr("action", '@Url.Action("Index", "Works")');
+        $("#FilterForm").submit();
     }
     function FuncController() {
-        console.log("Controller");
         document.getElementById('OperatorBtn').removeAttribute('disabled');
         document.getElementById('ControllerBtn').setAttribute('disabled', '');
+        document.getElementById('AssignBy').value = @Luser.First().ID;
+        document.getElementById('AssignTo').value = null;
+        document.getElementById('Project').value = null;
+        document.getElementById('Status').value = null;
+        document.getElementById('ChangeMode').value = "Controller";
+
+        $("#FilterForm").attr("action", '@Url.Action("Index", "Works")');
+        $("#FilterForm").submit();
     }
     document.addEventListener("DOMContentLoaded",
         () => {
+
+            if ("@Context.Session.GetString("Default")" == "Operator") {
+                document.getElementById('OperatorBtn').setAttribute('disabled', '');
+                document.getElementById('ControllerBtn').removeAttribute('disabled');
+            }
+            else {
+                document.getElementById('OperatorBtn').removeAttribute('disabled');
+                document.getElementById('ControllerBtn').setAttribute('disabled', '');
+            }
+
+
 
             $('#select-filter-options').multiselect({
                 buttonClass: 'form-select',
@@ -212,9 +229,17 @@
                 includeSelectAllOption: true,
                 onSelectAll: function (options) {
                     document.getElementById("IsSelect").value = true;
+                    var toppings = $('#select-filter-options option:selected');
+                    var selected = [];
+                    $(toppings).each(function (index, item) {
+                        selected.push([$(this).val()]);
+                    });
+
+                    document.getElementById("AssignTo").value = selected.join(',');
                 },
                 onDeselectAll: function (options) {
                     document.getElementById("IsSelect").value = false;
+                    document.getElementById("AssignTo").value = "";
                 },
                 //includeResetOption: true,
                 //selectAllName: 'select-all-name',
