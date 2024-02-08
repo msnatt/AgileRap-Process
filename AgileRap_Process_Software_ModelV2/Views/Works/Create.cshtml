@@ -142,6 +142,9 @@
                 @Html.HiddenFor(m => m.Last().ProviderList)
                 @Html.HiddenFor(m => m.Last().IsSelectAll)
                 @Html.Hidden("UserID", Luser.First().ID)
+                <div hidden>
+                    @Html.EditorFor(m => m.Last().Provider)
+                </div>
 
                 <td class="text-center">
                     @Html.DisplayFor(m => m.Last().CreateDate)
@@ -163,7 +166,7 @@
                     <select hidden id="select-tops-options" asp-items="@ViewBag.UserBag" multiple>
                     </select>
                 </td>
-                <td class="text-center">
+                <td class="text-center" id="StatusTableData">
                     @Html.DisplayFor(m => StatusBag.Where(b => b.Value == Model.Last().StatusID.ToString()).First().Text)
                 </td>
                 <td>
@@ -189,12 +192,14 @@
 
 <script>
     function FuncUpdateStatus() {
+
+
         $("#CreateForm").attr("action", '@Url.Action("UpdateStatus", "Works")');
         $("#CreateForm").submit();
     };
 
     function SubmitFilter() {
-        $("#FilterForm").attr("action", '@Url.Action("Create", "Works", new { @work = Model.Last() })');
+        $("#FilterForm").attr("action", '@Url.Action("Create", "Works")');
         $("#FilterForm").submit();
     };
 
@@ -281,6 +286,14 @@
                 }
             });
 
+            var toppings = $('#select-filter-options option:selected');
+            var selected = [];
+            $(toppings).each(function (index, item) {
+                selected.push([$(this).val()]);
+            });
+            document.getElementById("AssignTo").value = selected.join(',');
+
+
             $('#select-filter-options').multiselect({
                 buttonClass: 'form-select',
                 nonSelectedText: 'Select Provider',
@@ -301,7 +314,7 @@
                 },
                 onDeselectAll: function (options) {
                     document.getElementById("IsSelect").value = false;
-                    document.getElementById("AssignTo").value = "";
+                    // document.getElementById("AssignTo").value = "";
                 },
                 //includeResetOption: true,
                 //selectAllName: 'select-all-name',

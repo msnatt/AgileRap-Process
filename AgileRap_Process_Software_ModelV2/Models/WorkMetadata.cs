@@ -64,6 +64,8 @@ namespace AgileRap_Process_Software_ModelV2.Models
 
         public void Insert(AgileRap_Process_Software_Context db)
         {
+            this.Provider = new List<Provider>();
+
             //ตัวจัดการ dropdown multi checkbox
             if (this.IsSelectAll)
             {
@@ -78,13 +80,17 @@ namespace AgileRap_Process_Software_ModelV2.Models
             }
             else
             {
-                foreach (var item in this.ProviderIDs.Split(','))
+                if (this.ProviderIDs != null)
                 {
-                    Provider provider = new Provider();
-                    provider.WorkID = this.ID;
-                    provider.UserID = int.Parse(item);
-                    provider.Insert(db);
-                    this.Provider.Add(provider);
+                    foreach (var item in this.ProviderIDs.Split(','))
+                    {
+                        Provider provider = new Provider();
+                        provider.WorkID = this.ID;
+                        provider.UserID = int.Parse(item);
+                        provider.Insert(db);
+                        this.Provider.Add(provider);
+                    }
+
                 }
             }
             db.Work.Add(this);

@@ -61,7 +61,7 @@ namespace AgileRap_Process_Software_ModelV2.Controllers
             Works = FilterWorks(Works, AssignBy, AssignTo, Project, Status, IsChangePage);
 
             //เพิ่มข้อมูลที่พึ่งสร้างขึ้นมาเข้าไปที่ Work ที่ดึงมาจาก database
-            Works.Add(new Work() { CreateDate = DateTime.Now, StatusID = 1, CreateBy = GlobalVariable.GetUserLogin() });
+            Works.Add(new Work() { CreateDate = DateTime.Now, StatusID = 1,Provider = new List<Provider>(), CreateBy = GlobalVariable.GetUserLogin() });
 
             //ChangeMode Operator or Controller
             FuncChangeMode(ChangeMode);
@@ -99,7 +99,7 @@ namespace AgileRap_Process_Software_ModelV2.Controllers
             SentEmailToProvider(Work);
 
             //กลับสู่หน้าหลัก
-            return RedirectToAction("Index");
+            return RedirectToAction("Index",new {AssignBy = HttpContext.Session.GetString("AssignBy"), AssignTo = HttpContext.Session.GetString("AssignTo"), Project = HttpContext.Session.GetString("Project"), Status = HttpContext.Session.GetString("Status") });
         }
         public ActionResult Edit(int id, string? AssignBy, string? AssignTo, string? Project, string? Status, bool? IsChangePage, string? ChangeMode)
         {
@@ -233,14 +233,19 @@ namespace AgileRap_Process_Software_ModelV2.Controllers
         [HttpPost]
         public ActionResult UpdateStatus(Work work)
         {
+            string? AssignBy = HttpContext.Session.GetString("AssignBy");
+            string? AssignTo = HttpContext.Session.GetString("AssignTo");
+            string? Project = HttpContext.Session.GetString("Project");
+            string? Status = HttpContext.Session.GetString("Status");
+
             //Declure Variable
             List<Work> Works = new List<Work>();
             //==============================================//
             Works = GetWork();
+            Works = FilterWorks(Works, AssignBy, AssignTo, Project,Status, null);
             if (work.DueDate == null) { work.StatusID = 1; } else { work.StatusID = 2; }
             AllBag();
             Works.Add(work);
-            ModelState.Clear();
             return View("Create", Works);
         }
         private void ConvertProviderToAssignText(List<Work> works)
@@ -287,8 +292,10 @@ namespace AgileRap_Process_Software_ModelV2.Controllers
             //Send Email
             //เก็บ Email ผู้รับไว้ใน EmailList
             work.Status = db.Status.Find(work.StatusID);
+
             foreach (var item in work.Provider)
             {
+                item.User = db.User.Find(item.UserID);
                 EmailList.Add(item.User.Email);
             }
 

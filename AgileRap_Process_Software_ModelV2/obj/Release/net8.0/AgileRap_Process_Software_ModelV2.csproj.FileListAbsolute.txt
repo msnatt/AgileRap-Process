@@ -260,3 +260,7 @@ D:\63114540387\ASPdotNet\AgileRap_Process_Software_ModelV2\AgileRap_Process_Soft
 D:\63114540387\ASPdotNet\AgileRap_Process_Software_ModelV2\AgileRap_Process_Software_ModelV2\obj\Release\net8.0\AgileRap_Process_Software_ModelV2.pdb
 D:\63114540387\ASPdotNet\AgileRap_Process_Software_ModelV2\AgileRap_Process_Software_ModelV2\obj\Release\net8.0\AgileRap_Process_Software_ModelV2.genruntimeconfig.cache
 D:\63114540387\ASPdotNet\AgileRap_Process_Software_ModelV2\AgileRap_Process_Software_ModelV2\obj\Release\net8.0\ref\AgileRap_Process_Software_ModelV2.dll
+D:\63114540387\ASPdotNet\AgileRap_Process_Software_ModelV2\AgileRap_Process_Software_ModelV2\bin\Release\net8.0\MailKit.dll
+D:\63114540387\ASPdotNet\AgileRap_Process_Software_ModelV2\AgileRap_Process_Software_ModelV2\bin\Release\net8.0\MimeKit.dll
+D:\63114540387\ASPdotNet\AgileRap_Process_Software_ModelV2\AgileRap_Process_Software_ModelV2\bin\Release\net8.0\NETCore.MailKit.dll
+D:\63114540387\ASPdotNet\AgileRap_Process_Software_ModelV2\AgileRap_Process_Software_ModelV2\bin\Release\net8.0\BouncyCastle.Crypto.dll
