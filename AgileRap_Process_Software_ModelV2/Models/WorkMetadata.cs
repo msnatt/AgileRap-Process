@@ -1,5 +1,6 @@
 ﻿using AgileRap_Process_Software_ModelV2.Data;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.DotNet.Scaffolding.Shared;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -44,25 +45,50 @@ namespace AgileRap_Process_Software_ModelV2.Models
         [NotMapped]
         public bool IsFound { get; set; }
         [NotMapped]
-        public string DueDateText
+        public string? DueDateText
         {
             get
             {
-                return DueDate.Value.Date.ToString("dd/MM/yyyy");
+                if (DueDate != null)
+                {
+                    return DueDate.Value.Date.ToString("dd/MM/yyyy");
+                }
+                else { return null; }
             }
         }
 
         [NotMapped]
         [DisplayName("Assign To/Provider")]
         public string? ProviderList { get; set; }
-        public void Insert()
+
+
+        public void Insert(AgileRap_Process_Software_Context db)
         {
-            this.CreateDate = DateTime.Now;
-            this.UpdateDate = DateTime.Now;
-            this.IsDelete = false;
-            this.IsSelectAll = false;
-            this.CreateBy = GlobalVariable.GetUserLogin();
-            this.StatusID = 1;
+            //ตัวจัดการ dropdown multi checkbox
+            if (this.IsSelectAll)
+            {
+                foreach (var item in db.User.ToList())
+                {
+                    Provider provider = new Provider();
+                    provider.WorkID = this.ID;
+                    provider.UserID = item.ID;
+                    provider.Insert(db);
+                    this.Provider.Add(provider);
+                }
+            }
+            else
+            {
+                foreach (var item in this.ProviderIDs.Split(','))
+                {
+                    Provider provider = new Provider();
+                    provider.WorkID = this.ID;
+                    provider.UserID = int.Parse(item);
+                    provider.Insert(db);
+                    this.Provider.Add(provider);
+                }
+            }
+            db.Work.Add(this);
+            //*************************************************//
         }
         public void Update(AgileRap_Process_Software_Context db)
         {
@@ -96,10 +122,14 @@ namespace AgileRap_Process_Software_ModelV2.Models
                 foreach (var item in db.User.ToList())
                 {
                     Provider provider = new Provider();
-                    provider.Insert(db, this, item.ID);
+                    provider.UserID = item.ID;
+                    provider.WorkID = this.ID;
+                    provider.Insert(db);
 
                     ProviderLog providerLog = new ProviderLog();
-                    providerLog.Insert(db, workLog, item.ID);
+                    providerLog.UserID = item.ID;
+                    providerLog.WorkLogID = workLog.ID;
+                    providerLog.Insert(db);
                     db.SaveChanges();
                 }
                 // ทำ List strings ให้ว่าง
@@ -107,12 +137,12 @@ namespace AgileRap_Process_Software_ModelV2.Models
             }
 
             //กรณีเลือก provider มาบางส่วน
-            foreach (string s in strings)
+            foreach (string b in strings)
             {
                 bool isvalid = false;
                 foreach (var item in this.Provider)
                 {
-                    if (s == item.UserID.ToString())
+                    if (b == item.UserID.ToString())
                     {
                         isvalid = true;
                     }
@@ -124,10 +154,15 @@ namespace AgileRap_Process_Software_ModelV2.Models
                 if (!isvalid)
                 {
                     Provider provider = new Provider();
-                    provider.Insert(db, this, int.Parse(s));
+                    provider.UserID = int.Parse(b);
+                    provider.WorkID = this.ID;
+                    provider.Insert(db);
+
                 }
                 ProviderLog providerLog = new ProviderLog();
-                providerLog.Insert(db, workLog, int.Parse(s));
+                providerLog.UserID = int.Parse(b);
+                providerLog.WorkLogID = workLog.ID;
+                providerLog.Insert(db);
                 db.SaveChanges();
             }
             //บันทึกการเปลี่ยนแปลงลง Database

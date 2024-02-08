@@ -5,6 +5,7 @@
     int count = Model.Count() + 1;
     Microsoft.EntityFrameworkCore.Query.Internal.EntityQueryable<SelectListItem> UserBag = ViewBag.UserBag;
     Microsoft.EntityFrameworkCore.Query.Internal.EntityQueryable<User> Luser = ViewBag.UserLogin;
+    string Text = Context.Session.GetString("Default");
 }
 <style>
     .pre-lines {
@@ -14,7 +15,7 @@
 
 <div class="row">
     <div class="offset-md-1 col-md-3">
-        <h1>History Task Log</h1>
+        <h1>ประวัติการแก้ไข(@Text)</h1>
     </div>
     <div class="col-md-8 text-end">
         @Luser.First().Name
@@ -279,10 +280,19 @@
                 includeSelectAllOption: true,
                 onSelectAll: function (options) {
                     document.getElementById("IsSelect").value = true;
+                    var toppings = $('#select-filter-options option:selected');
+                    var selected = [];
+                    $(toppings).each(function (index, item) {
+                        selected.push([$(this).val()]);
+                    });
+
+                    document.getElementById("AssignTo").value = selected.join(',');
                 },
                 onDeselectAll: function (options) {
                     document.getElementById("IsSelect").value = false;
+                    document.getElementById("AssignTo").value = "";
                 },
+
                 //includeResetOption: true,
                 //selectAllName: 'select-all-name',
                 onChange: function (option, checked) {

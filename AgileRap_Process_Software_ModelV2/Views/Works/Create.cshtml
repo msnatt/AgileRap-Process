@@ -19,7 +19,7 @@
 </div>
 <br />
 <br />
-@using (Html.BeginForm("Create", "Works", FormMethod.Get, new { id = "FilterForm", name = "FilterForm" }))
+@using (Html.BeginForm("", "Works", FormMethod.Get, new { id = "FilterForm", name = "FilterForm" }))
 {
     @Html.Hidden("IsSelect")
     @Html.Hidden("AssignTo")
@@ -59,11 +59,12 @@
         <div class="col-md-2">
             @Html.DropDownList("Status", new SelectList(ViewBag.StatusBag, "Value", "Text", Context.Session.GetString("Status")), "Select Status", new { @class = "form-select" })
         </div>
-        <div class="col-md-1">
-            <input value="Search" type="submit" class="btn btn-dark" />
-        </div>
+        <span class="col-md-1">
+            <input value="Search" type="button" onclick="SubmitFilter()" class="btn btn-dark" />
+        </span>
     </div>
 }
+
 <table class="table table-borlesses">
     <thead>
         <tr>
@@ -192,6 +193,11 @@
         $("#CreateForm").submit();
     };
 
+    function SubmitFilter() {
+        $("#FilterForm").attr("action", '@Url.Action("Create", "Works", new { @work = Model.Last() })');
+        $("#FilterForm").submit();
+    };
+
     function FuncOperator() {
         document.getElementById('OperatorBtn').setAttribute('disabled', '');
         document.getElementById('ControllerBtn').removeAttribute('disabled');
@@ -285,9 +291,17 @@
                 includeSelectAllOption: true,
                 onSelectAll: function (options) {
                     document.getElementById("IsSelect").value = true;
+                    var toppings = $('#select-filter-options option:selected');
+                    var selected = [];
+                    $(toppings).each(function (index, item) {
+                        selected.push([$(this).val()]);
+                    });
+
+                    document.getElementById("AssignTo").value = selected.join(',');
                 },
                 onDeselectAll: function (options) {
                     document.getElementById("IsSelect").value = false;
+                    document.getElementById("AssignTo").value = "";
                 },
                 //includeResetOption: true,
                 //selectAllName: 'select-all-name',

@@ -4,12 +4,6 @@
     using System.Collections.Generic;
     public partial class Work
     {
-        public Work()
-        {
-            this.Provider = new HashSet<Provider>();
-            this.WorkLog = new HashSet<WorkLog>();
-            
-        }
 
         public int ID { get; set; }
         public int? HeaderID { get; set; }

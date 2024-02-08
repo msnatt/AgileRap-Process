@@ -13,17 +13,18 @@ namespace AgileRap_Process_Software_ModelV2.Controllers
 {
     public class WorksController : BaseController
     {
-        public void AllBag(int id)
+        public void AllBag()
         {
             ViewBag.StatusBag = db.Status.Select(i => new SelectListItem() { Value = i.ID.ToString(), Text = i.StatusName });
             ViewBag.UserBag = db.User.Select(i => new SelectListItem() { Value = i.ID.ToString(), Text = i.Name });
             List<SelectListItem> ListWorkTemp = db.Work.Select(i => new SelectListItem() { Value = i.Project, Text = i.Project }).ToList();
             ViewBag.WorkBag = ListWorkTemp.DistinctBy(b => b.Value);
-            ViewBag.UserLogin = db.User.Where(b => b.ID == id);
+            ViewBag.UserLogin = db.User.Where(b => b.ID == GlobalVariable.GetUserLogin());
             ViewBag.UserFilterBag = SelectedSelectListItem(HttpContext.Session.GetString("AssignTo"));
         }
         private void FuncChangeMode(string? changeMode)
         {
+            //Set mode to session
             if (changeMode == "Operator")
             {
                 HttpContext.Session.SetString("Default", "Operator");
@@ -35,9 +36,14 @@ namespace AgileRap_Process_Software_ModelV2.Controllers
         }
         public ActionResult Index(string? AssignBy, string? AssignTo, string? Project, string? Status, bool? IsChangePage, string? ChangeMode)
         {
-            List<Work> Works = GetWork();
+            //Declure Variable
+            List<Work> Works = new List<Work>();
+            //==============================================//
+
+            Works = GetWork();
             Works = FilterWorks(Works, AssignBy, AssignTo, Project, Status, IsChangePage);
-            AllBag(GlobalVariable.GetUserLogin());
+
+            AllBag();
 
             //ChangeMode Operator or Controller
             FuncChangeMode(ChangeMode);
@@ -46,50 +52,36 @@ namespace AgileRap_Process_Software_ModelV2.Controllers
         }
         public ActionResult Create(string? AssignBy, string? AssignTo, string? Project, string? Status, bool? IsChangePage, string? ChangeMode)
         {
+            //Declure Variable
+            List<Work> Works = new List<Work>();
+            //==============================================//
+
             //ดึงข้อมูล Work จาก Database
-            List<Work> Works = GetWork();
+            Works = GetWork();
             Works = FilterWorks(Works, AssignBy, AssignTo, Project, Status, IsChangePage);
 
-            Work work = new Work();
-            work.Insert();
-
             //เพิ่มข้อมูลที่พึ่งสร้างขึ้นมาเข้าไปที่ Work ที่ดึงมาจาก database
-            Works.Add(work);
+            Works.Add(new Work() { CreateDate = DateTime.Now, StatusID = 1, CreateBy = GlobalVariable.GetUserLogin() });
 
             //ChangeMode Operator or Controller
             FuncChangeMode(ChangeMode);
 
-            AllBag(GlobalVariable.GetUserLogin());
+            AllBag();
             return View(Works);
         }
         [HttpPost]
         public ActionResult Create(Work Work)
         {
-            //ตัวจัดการ dropdown multi checkbox
-            if (Work.IsSelectAll)
-            {
-                foreach (var item in db.User.ToList())
-                {
-                    Provider provider = new Provider();
-                    provider.Insert(db, Work, item.ID);
-                    Work.Provider.Add(provider);
-                }
-            }
-            else
-            {
-                foreach (var item in Work.ProviderIDs.Split(','))
-                {
-                    Provider provider = new Provider();
-                    provider.Insert(db, Work, int.Parse(item));
-                    Work.Provider.Add(provider);
-                }
-            }
-            //*************************************************//
-            db.Work.Add(Work);
+            //Declure Variable
+            WorkLog workLog = new WorkLog();
+            ProviderLog providerLog = new ProviderLog();
+            //==============================================//
+
+            //Insert Work To Database
+            Work.Insert(db);
             db.SaveChanges();
 
             //บันทึก Work ปัจจุบันลง WorkLog
-            WorkLog workLog = new WorkLog();
             workLog.Insert(db, Work);
             db.SaveChanges();
 
@@ -97,36 +89,42 @@ namespace AgileRap_Process_Software_ModelV2.Controllers
             foreach (var ProviderItem in Work.Provider)
             {
                 //บันทึก Provider ปัจจุบันลง ProviderLog
-                ProviderLog providerLog = new ProviderLog();
-                providerLog.Insert(db, workLog, ProviderItem.ID);
+                providerLog.WorkLogID = workLog.ID;
+                providerLog.UserID = ProviderItem.UserID;
+                providerLog.Insert(db);
             }
             db.SaveChanges();
+
             //ส่งแจ้งเตือนผ่านเมล์
             SentEmailToProvider(Work);
+
             //กลับสู่หน้าหลัก
             return RedirectToAction("Index");
         }
         public ActionResult Edit(int id, string? AssignBy, string? AssignTo, string? Project, string? Status, bool? IsChangePage, string? ChangeMode)
         {
+            //Declure Variable
+            List<Work> Works = new List<Work>();
+            //==============================================//
+
             //หาตัวที่ต้องการแก้ไขจาก id 
-            List<Work> Works = GetWork();
+            Works = GetWork();
             Works = FilterWorks(Works, AssignBy, AssignTo, Project, Status, IsChangePage);
             var work = Works.Where(b => b.ID == id).FirstOrDefault();
+
+            //ChangeMode Operator or Controller
+            FuncChangeMode(ChangeMode);
 
             //เช็คว่าที่กรองมา มี id ที่ตรงกับที่ผู้ใช้ต้องการ Edit ไหม 
             if (Works.Where(b => b.ID == id).Count() == 0)
             {
                 //ถ้าไม่ย้อนกลับไปหน้า Index
-                return RedirectToAction("Index", Works);
+                return RedirectToAction("Index", new { AssignBy, AssignTo, Project, Status });
             }
-
             //************************************************//
 
-            //ChangeMode Operator or Controller
-            FuncChangeMode(ChangeMode);
-
+            AllBag();
             ViewBag.Model = Works;
-            AllBag(GlobalVariable.GetUserLogin());
             ViewBag.UserBag = SelectedSelectListItem(work.ProviderIDs);
             return View(work);
         }
@@ -147,9 +145,15 @@ namespace AgileRap_Process_Software_ModelV2.Controllers
         }
         public ActionResult History(int id, string? AssignBy, string? AssignTo, string? Project, string? Status, bool? IsChangePage, string? ChangeMode)
         {
-            List<Work> Works = db.Work.Where(b => b.ID == id).ToList();
-            
-            List<Work> works = GetWork();
+            //Declure Variable
+            List<Work> Works = new List<Work>();
+            List<Work> works = new List<Work>();
+            List<WorkLog> wLog = new List<WorkLog>();
+            //==============================================//
+
+            Works = db.Work.Where(b => b.ID == id).ToList();
+
+            works = GetWork();
             works = FilterWorks(works, AssignBy, AssignTo, Project, Status, IsChangePage);
 
             works = works.Where(b => b.ID != Works.First().ID).ToList();
@@ -163,7 +167,7 @@ namespace AgileRap_Process_Software_ModelV2.Controllers
                 {
                     //เคลีย WorkLog แล้วดึงมาใหม่
                     work.WorkLog.Clear();
-                    var wLog = db.WorkLog.Where(b => b.WorkID == id).Include(m => m.Status).ToList();
+                    wLog = db.WorkLog.Where(b => b.WorkID == id).Include(m => m.Status).ToList();
 
                     //เทียบระหว่าง Log 2 ตัว และนำตัวที่ต่างกันเขียนลงใน Description
                     if (wLog.Count > 1)
@@ -174,7 +178,7 @@ namespace AgileRap_Process_Software_ModelV2.Controllers
                             if (wLog[i].Project != wLog[i + 1].Project) { wLog[i].Description += "Project : " + wLog[i].Project + " > " + wLog[i + 1].Project + "\n"; }
                             if (wLog[i].Name != wLog[i + 1].Name) { wLog[i].Description += "Name : " + wLog[i].Name + " > " + wLog[i + 1].Name + "\n"; }
                             if (wLog[i].CreateBy != wLog[i + 1].CreateBy) { wLog[i].Description += "Assign By : " + wLog[i].CreateBy + " > " + wLog[i + 1].CreateBy + "\n"; }
-                            if (wLog[i].CreateDate != wLog[i + 1].CreateDate) { wLog[i].Description += "Created Date : " + wLog[i].CreateDate + " > " + wLog[i + 1].CreateDate + "\n"; }
+                            if (wLog[i].UpdateDate != wLog[i + 1].UpdateDate) { wLog[i].Description += "Update Date : " + wLog[i].UpdateDate + " > " + wLog[i + 1].UpdateDate + "\n"; }
                             if (wLog[i].StatusID != wLog[i + 1].StatusID) { wLog[i].Description += "Status : " + wLog[i].Status.StatusName + " > " + wLog[i + 1].Status.StatusName + "\n"; }
                             if (wLog[i].Remark != wLog[i + 1].Remark) { wLog[i].Description += "Remark : " + wLog[i].Remark + " > " + wLog[i + 1].Remark + "\n"; }
                             if (wLog[i].ProviderLogList != wLog[i + 1].ProviderLogList) { wLog[i].Description += "Provider : " + wLog[i].ProviderLogList + " > " + wLog[i + 1].ProviderLogList + "\n"; }
@@ -186,14 +190,18 @@ namespace AgileRap_Process_Software_ModelV2.Controllers
             //ChangeMode Operator or Controller
             FuncChangeMode(ChangeMode);
 
+            AllBag();
             ViewBag.IDBag = id;
-            AllBag(GlobalVariable.GetUserLogin());
             return View(Works);
         }
         public List<Work> GetWork()
         {
+            //Declure Variable
+            List<Work> Works = new List<Work>();
+            //==============================================//
+
             //ดึงข้อมูลมาจาก Database ทั้งหมดที่เชื่อมโยงกับ Work
-            var Works = db.Work.Include(m => m.Status).Include(b => b.Provider).Include(h => h.WorkLog).ToList();
+            Works = db.Work.Include(m => m.Status).Include(b => b.Provider).Include(h => h.WorkLog).ToList();
             foreach (var item in Works)
             {
                 foreach (var item2 in item.Provider)
@@ -225,9 +233,12 @@ namespace AgileRap_Process_Software_ModelV2.Controllers
         [HttpPost]
         public ActionResult UpdateStatus(Work work)
         {
-            List<Work> Works = GetWork();
+            //Declure Variable
+            List<Work> Works = new List<Work>();
+            //==============================================//
+            Works = GetWork();
             if (work.DueDate == null) { work.StatusID = 1; } else { work.StatusID = 2; }
-            AllBag(GlobalVariable.GetUserLogin());
+            AllBag();
             Works.Add(work);
             ModelState.Clear();
             return View("Create", Works);
@@ -267,17 +278,22 @@ namespace AgileRap_Process_Software_ModelV2.Controllers
         }
         private void SentEmailToProvider(Work work)
         {
+            //Declure Variable
+            List<string> EmailList = new List<string>();
+            EmailSender _emailSender;
+            Message message;
+            //==============================================//
+
             //Send Email
             //เก็บ Email ผู้รับไว้ใน EmailList
             work.Status = db.Status.Find(work.StatusID);
-            List<string> EmailList = new List<string>();
             foreach (var item in work.Provider)
             {
                 EmailList.Add(item.User.Email);
             }
 
             //ดึงเมล์คนส่งจาก appsetting.json
-            EmailSender _emailSender = new EmailSender(HttpContext.RequestServices.GetService<EmailConfiguration>());
+            _emailSender = new EmailSender(HttpContext.RequestServices.GetService<EmailConfiguration>());
 
             //กำหนดข้อความที่จะส่งไปในเมล์
             string contentText = $"" +
@@ -291,13 +307,17 @@ namespace AgileRap_Process_Software_ModelV2.Controllers
                 $"";
 
             //รวมข้อมูลที่เตรียมไว้ข้างต้น
-            Message message = new Message(EmailList, work.Project, contentText);
+            message = new Message(EmailList, work.Project, contentText);
 
             //ทำการส่ง Email ไปตามใน EmailList
             _emailSender.SendEmail(message);
         }
         private List<Work> FilterWorks(List<Work> Works, string? AssignBy, string? AssignTo, string? Project, string? Status, bool? IsChangePage)
         {
+            //Declure Variable
+            string[] strings;
+            //==============================================//
+
             if (IsChangePage == null && AssignBy == null) { HttpContext.Session.Remove("AssignBy"); }
             if (IsChangePage == null && AssignTo == null) { HttpContext.Session.Remove("AssignTo"); }
             if (IsChangePage == null && Project == null) { HttpContext.Session.Remove("Project"); }
@@ -310,7 +330,7 @@ namespace AgileRap_Process_Software_ModelV2.Controllers
             if (AssignTo != null)
             {
                 //Credit P Terng
-                string[] strings = AssignTo.Split(',');
+                strings = AssignTo.Split(',');
                 foreach (var work in Works)
                 {
                     if (work.Provider.Where(w => strings.Contains(w.UserID.ToString()) == true).Count() > 0) { work.IsFound = true; }
@@ -323,11 +343,15 @@ namespace AgileRap_Process_Software_ModelV2.Controllers
         }
         public List<SelectListItem> SelectedSelectListItem(string Liststring)
         {
-            //ทำ SelectListItem ให้กับ Dropdown multi checkbox เพื่อให้มีค่าตรงกับ Provider ใน Database
+            //Declure Variable
             List<SelectListItem> list = new List<SelectListItem>();
+            SelectListItem selectListItem = new SelectListItem();
+            //==============================================//
+
+            //ทำ SelectListItem ให้กับ Dropdown multi checkbox เพื่อให้มีค่าตรงกับ Provider ใน Database
             foreach (var item in db.User)
             {
-                SelectListItem selectListItem = new SelectListItem();
+                selectListItem = new SelectListItem();
                 selectListItem.Value = item.ID.ToString();
                 selectListItem.Text = item.Name;
                 if (Liststring != null)
@@ -353,7 +377,11 @@ namespace AgileRap_Process_Software_ModelV2.Controllers
         }
         private bool FuncCheckDulicateData(Work work)
         {
-            List<Work> Works = GetWork();
+            //Declure Variable
+            List<Work> Works = new List<Work>();
+            //==============================================//
+
+            Works = GetWork();
             var temp = Works.Where(b => b.ID == work.ID).ToList().First();
             if (work.Project == temp.Project &&
                 work.Name == temp.Name &&
